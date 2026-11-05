@@ -1,15 +1,63 @@
-# Technical Case Studies
+# 기술 사례
 
-NOONCHI tracks three tasks as the resident moves from meal preparation to dining and rest.
+## 01. PAM 4일 일과 실험
 
-## 01. Close the Refrigerator Door
+직접 찍은 일과 영상 4편(공부 일과 2일, 밤 일과 2일)으로 시험했어요. VLM(Qwen3.5-27B)이 1초마다 PAM 기억과 최근 사진을 보고 도움 하나를 고르고, 하루가 끝나면 그날 사진으로 기억을 고쳐요. 같은 영상을 기억이 있을 때와 없을 때 견줬어요.
 
-The agent waits while the resident retrieves ingredients. If the door remains open after the resident moves to the counter, the agent checks the area around the door and the resident’s authorization. If the appliance cannot close the door through a command, the agent selects direct CLOiD manipulation. A demonstrator follows the phone instruction and closes the physical door. twin-home records completion after verifying that the same door is closed.
+| 날 | 기억 있음(FSM) | 기억 없음 |
+| --- | --- | --- |
+| 공부 2일째 | 0.41 | 0.04 |
+| 밤 1일째(일과가 바뀐 날) | 0.27 | 0.00 |
+| 밤 2일째 | 0.25 | 0.08 |
 
-## 02. Wash a Cup
+표의 수치는 정답 행동을 맞힌 정도(F1, 1이 만점)예요.
 
-The agent leaves a cup in use or intended for reuse. If an authorized cup still contains a drink, the agent checks permission to empty it. When the dishwasher is running, the agent retains the task and rechecks conditions once the dishwasher becomes available. Completion requires a successful wash result for the target cup in the linked virtual cycle.
+- **기억이 있으면 날마다 더 맞혔지만, 정확도는 낮았어요.** F1이 0.25–0.41에 그쳤고, 물건을 가져다줘야 하는 7번 중 제때 준 것은 2번이었어요.
+- **일과가 바뀐 뒤 반성에서 이전 일과 규칙이 모두 지워졌어요.** 다시 공부 일과로 돌아가면 처음부터 다시 배워야 해요.
+- **사진을 잘못 읽는 일이 잦았어요.** 책상 위 비타민 통을 캔으로 보고, 그날 없는 캔 치우기를 여러 번 골랐어요.
 
-## 03. Adjust the Air Conditioner
+## 02. 사진 보안 구조
 
-When the resident begins resting, the agent checks whether the preferred temperature is within the authorized and supported ranges. If an adjustment is needed, twin-home sets the temperature through ThinQ and reads the setpoint back from the same air conditioner.
+집 안 사진은 관찰 서버(백엔드)에서 수신기(gate)를 거쳐서만 판단 모델에 닿아요. 수신기는 모델 서버 앞에 서서, 판단하는 동안 모델 서버에서 사진이 새는지 지켜보고 새면 전송을 멈춰요.
+
+### 구성
+
+| 구성 | 하는 일 |
+| --- | --- |
+| 관찰 서버(백엔드) | 폰 화면과 가전 상태를 받아 판단에 보낼 정보를 만들고, 보낸 사진을 암호화해 보관해요 |
+| 수신기(gate) | 모델 서버에 설치돼요. 백엔드가 보낸 사진을 받아 판단 모델을 부르고, 그동안 모델 서버의 네트워크와 파일을 감시해요 |
+
+### 유출 감시와 전송 중단
+
+1. 백엔드가 연결할 때마다 수신기에 정책을 보내요. 판단 모델을 부르는 방식과, 판단 중에 접속해도 되는 주소 목록이에요.
+2. 수신기는 판단이 도는 동안 모델 서버를 지켜봐요.
+   - **네트워크:** 허용 목록에 없는 주소로 나가는 연결
+   - **파일:** 바탕화면, 다운로드, 문서, AI 저장소 폴더에 사진이 생기는지
+3. 유출을 잡으면 수신기가 백엔드에 경고를 보내고, 백엔드는 전송을 「경고로 중단」 상태로 멈춰요.
+4. 사람이 경고를 확인하고 재개해야 다시 보내요.
+
+수신기가 그냥 꺼진 것은 유출로 보지 않아요. 「AI 미연결」로 두었다가, 수신기가 다시 켜지면 저절로 이어서 보내요.
+
+### 연결
+
+- 처음 한 번 6자리 코드로 짝을 맺고, 그 뒤에는 양쪽 인증서를 고정한 TLS 1.3 상호 인증으로만 주고받아요.
+- 인증서 없이 접속하면 TLS 단계에서 끊겨요.
+- 코드가 틀리면 「짝 인증 실패」, 다시 짝을 맺어 인증서가 바뀌면 「인증서 불일치」 경고가 떠요.
+
+### 저장과 삭제
+
+- 판단에 보낸 사진만 남겨요. 사진마다 AES-256-GCM으로 암호화한 파일로 저장해서, 파일을 열어도 이미지가 아닌 암호문만 보여요.
+- 사진 열쇠를 감싸는 상위 키는 운영체제 키체인에 둬요.
+- 하루 반성 때 보낸 사진을 모두 모델 서버로 보내고, 보낸 뒤에는 양쪽에서 지워요. 날짜가 바뀌어도 지워요.
+
+### 보안 시험
+
+| 시험 | 방법 | 기대 결과 |
+| --- | --- | --- |
+| 저장 암호화 | 저장 파일의 앞부분 확인 | 암호문 표지와 무작위 바이트만 있고 이미지가 아님 |
+| 인증서 없는 접속 | 인증서 없이 수신기에 접속 | TLS 단계에서 끊김 |
+| 틀린 짝 코드 | 000000으로 짝 맺기 | 「짝 인증 실패」 경고 |
+| 네트워크 유출 | 판단 중 밖으로 연결을 여는 시험용 실행기 | 수신기 경고, 전송 중단, 확인 뒤 재개 |
+| 파일 유출 | 판단 중 다운로드 폴더에 사진을 잠깐 만드는 시험용 실행기 | 같은 흐름으로 잡힘 |
+| 수신기 종료 | 수신기를 껐다 켬 | 「AI 미연결」 뒤 자동 재개, 경고 없음 |
+| 반성 | 반성 실행 | 보낸 사진을 모두 보낸 뒤 양쪽에서 삭제 |

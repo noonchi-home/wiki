@@ -1,18 +1,26 @@
-# Project Overview
+# 프로젝트 개요
 
-NOONCHI is a smart-home agent prototype that helps during meal preparation, dining, and rest. It closes a refrigerator door left open after the resident moves to the counter, washes a cup after use, and adjusts the air conditioner when the resident begins to rest.
+NOONCHI는 LG 홈로봇 클로이드(CLOiD)를 위한 판단 시제품이에요. 거주자에게 도움이 필요한 순간을 알아채고, 아직 모르는 것을 확인한 뒤, 할지 기다릴지 정해요. 폰이 클로이드의 눈, 노트북이 집 허브가 되고, 클로이드의 손은 사람이 대신해요.
 
-## Metacognition and Empathetic Intelligence
+## 시연에서 보게 될 것
 
-- **Metacognition** identifies missing information and checks whether an action had the expected result. If the agent needs to know what is inside a cup, it requests a view from above.
-- **Empathetic intelligence** adapts assistance to the resident’s activity and preferences. The agent leaves a cup in use and defers nonurgent questions while the resident is drinking.
+거주자 한 명이 요리하고, 밥을 먹고, 쉬는 동안 NOONCHI가 세 가지 일을 맡아요.
 
-## Prototype Scope
+| 할 일 | 언제 나서나 | 누가 하나 | 끝났다고 보는 때 |
+| --- | --- | --- | --- |
+| 냉장고 문 닫기 | 문이 열린 채로 거주자가 조리대로 옮겨 갔을 때 | 폰 안내를 따르는 시연자 | ThinQ가 같은 문을 닫힘으로 읽거나, 나중에 찍은 사진에 닫힌 문이 보일 때 |
+| 컵 씻기 | 거주자가 컵을 두고 떠나 더 쓰지 않을 때 | 트윈 속 가상 식기세척기 | 이 컵이 든 세척 회차가 씻었다고 알릴 때 |
+| 에어컨 맞추기 | 거주자가 거실에서 쉬기 시작할 때 | 실제 에어컨(ThinQ) | ThinQ가 같은 에어컨에서 목표 온도를 다시 읽을 때 |
 
-A phone camera provides CLOiD’s view. A laptop running twin-home serves as the home hub.
+일마다 왜 했는지, 왜 아직 기다리는지 화면에서 볼 수 있어요.
 
-| Task | Completion |
-| --- | --- |
-| Close the refrigerator door | A demonstrator follows the phone instruction. twin-home verifies that the same physical door is closed. |
-| Wash a cup | The virtual dishwasher reports that the target cup was washed in the linked cycle. |
-| Adjust the air conditioner | ThinQ reports the new setpoint from the same physical air conditioner. |
+## 메타인지와 눈치
+
+- **메타인지:** 아직 모르는 것은 모른다고 둬요. 컵 안이 안 보이면 내용물을 「모름」으로 두고, 그게 판단에 중요하면 위에서 본 사진을 부탁해요. 한 뒤에는 결과가 예상과 같은지 확인해요.
+- **눈치:** 거주자가 아직 쓰는 물건에는 손대지 않고, 마시는 동안에는 급하지 않은 질문을 미뤄요.
+
+## 화면
+
+- **폰 화면:** 폰 카메라로 본 실시간 화면
+- **3D 트윈:** 집과 가전 상태, 클로이드의 위치, 에이전트가 지금 확인하는 것
+- **판단 기록:** 요청마다 거친 단계와 결과

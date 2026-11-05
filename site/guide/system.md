@@ -1,21 +1,41 @@
-# System Architecture
+# 시스템 구조
 
-## Observation and Memory
+## 구성
 
-The Android demo phone and the twin-home laptop communicate over a private Tailscale network. Hub access is limited to the registered phone to protect images of the resident and living space.
+| 구성 | 기술 스택 | 하는 일 |
+| --- | --- | --- |
+| 폰(클로이드의 눈) | 안드로이드 크롬, WebXR, WebCodecs(H.264), WebSocket | 자기 위치를 알고, 카메라 화면과 상태를 보내고, 시연자에게 할 일을 보여 줘요 |
+| twin-home(집 허브) | Node.js 22, TypeScript, matter.js, React, three.js, ThinQ API | 트윈 상태를 들고, 단계를 확인하고 실행하고, ThinQ와 가상 기기를 다루고, 대시보드를 띄워요 |
+| PAM 모델 | Python, Qwen3.5-27B, vLLM | 최근 사진과 그날의 기억을 읽고, 할 일 하나나 「기다림」을 돌려줘요 |
+| 관찰 서버 | Python 3.11, YOLO26n, SQLite, AES-256-GCM, TLS 1.3 | 화면과 가전 상태를 모으고, 아무 일 없는 구간은 건너뛰고, 이력을 쌓아요 |
 
-A separately served vision-language model (VLM) proposes assistance from recent observations, the day’s procedural assistance memory (PAM), and a list of available actions. PAM uses a finite-state machine to store activity phases, appropriate assistance, and cues for moving to the next phase.
+폰과 노트북은 Tailscale 사설망으로 이어지고, 등록한 시연용 폰만 허브에 닿을 수 있어요.
 
-## Execution Checks
+## 판단 한 번의 흐름
 
-twin-home synchronizes physical appliance states through ThinQ and tracks CLOiD and its targets in the virtual home. The agent expands a proposal into steps and checks prerequisites, appliance capabilities, locations, and the resident’s authorization.
+1. **보기:** twin-home이 2초 간격으로 찍은 사진 5장(최근 8초)을 모아요.
+2. **제안 받기:** 사진, 그날의 PAM 기억, 할 수 있는 일 목록을 모델에 보내요. 모델은 할 일 번호나 -1(기다림)을 돌려줘요. 시간 초과, 요청과 맞지 않는 답, 목록 밖 번호는 오류로 남기고, 이미 진행 중인 목표는 그대로 둬요.
+3. **나누기:** 제안을 단계로 나눠요. 단계마다 앞선 조건, 가전 상태와 기능, 클로이드와 대상의 위치, 거주자가 원하는지와 허락했는지를 확인해요. 클로이드가 먼저 움직여야 하면 그 이동도 한 단계가 돼요.
+4. **견주기:** 후보마다 지금 상태의 사본에 효과를 적용해 보고, 하기와 기다리기를 예상 결과·방해 정도·늦어짐으로 견줘요.
+5. **실행:** 준비된 단계를 ThinQ, 가상 기기, 폰을 통한 시연자 중 쓸 수 있는 경로로 보내요. 기기마다 한 번에 한 단계만 다루고, 보내기 직전에 대상·상태·허락을 다시 확인해요. 실행 ID가 있어서 같은 일이 두 번 돌지 않아요.
+6. **확인:** 확인된 결과로만 트윈을 바꾸고 다음 단계를 봐요. 막힌 단계는 멈춘 까닭과 다시 할 조건을 남겨요. 거주자가 새로 답하거나 상태가 바뀌면 아직 시작하지 않은 단계를 고쳐요.
 
-- If direct manipulation requires movement, the agent adds it as a prerequisite.
-- If a step is blocked, the agent records the reason and the condition for resuming.
-- If the resident responds or an appliance state changes, the agent revises unstarted steps and their order.
+## 과제별 규칙
 
-## Outcomes and Memory Updates
+**냉장고 문.** 문 상태와 폰 사진을 문 ID와 시각으로 짝지어요. 거주자가 재료를 꺼내는 중이거나, 냉장고로 돌아오거나, 문 앞이 가려지거나, 관찰이 끊기면 기다리고, 아직 하지 않은 안내는 취소해요. 문이 계속 열려 있고, 거주자가 조리대에서 일을 이어 가고, 문 주변이 비어 있으면 나서요. 폰이 시연자에게 작업 ID·문·할 일·까닭을 보여 줘요. ThinQ가 같은 문을 닫힘으로 읽거나 나중에 찍은 사진에 닫힌 문이 보이면 끝이고, 근거가 모자라면 「확인 안 됨」으로 남아요.
 
-twin-home executes each ready step and updates the twin with the verified outcome before evaluating the next step.
+**컵.** 쓰는 중이거나, 다시 쓸 컵이거나, 치워도 된다는 허락이 없는 컵은 그대로 둬요. 안이 안 보이는데 그게 중요하면, 어느 컵을 왜 어떤 각도로 찍을지 밝혀 사진을 부탁해요. 씻기 전에는 다 마셨는지, 음료가 남았다면 버려도 되는지 확인해요. 식기세척기가 쉬고 있고 자리가 있을 때만 넣어요. 세척 회차마다 ID가 붙고, 그 회차가 이 컵을 씻었다고 알려야 끝이에요. 식기세척기가 돌고 있으면 컵은 목표·허락·기다리는 까닭을 그대로 들고 기다려요. 그사이 찾은 다른 그릇은 따로 확인하고, 첫 컵의 허락을 넘겨받지 않아요.
 
-The agent uses the same memory version throughout the day. At day’s end, it proposes revisions from observations, execution outcomes, and resident feedback. Revisions take effect the next day after state references and permitted actions pass validation.
+**에어컨.** 거주자가 거실에서 쉬기 시작하면, 원하는 온도가 거주자가 허락한 범위와 기기가 지원하는 범위 안에 있는지 봐요. 지금 설정 온도가 다를 때만 ThinQ 명령을 보내고, 거주자가 거절하거나 기기 상태를 모르면 기다려요. ThinQ가 같은 에어컨에서 설정 온도를 다시 읽으면 끝이에요. 기기가 거부하면 실패이고, 받았지만 확인이 안 되면 「확인 안 됨」이에요.
+
+**함께 돌 때.** 기기마다 한 번에 한 단계만 다뤄요. 식기세척기가 돌고 있으면 컵 넣기는 기다리지만, 허락된 에어컨 조절은 따로 진행할 수 있어요.
+
+## 기억
+
+PAM은 JSON으로 저장한 유한 상태 기계(FSM)예요. 활동 단계, 상황과 도울 일을 짝지은 규칙, 다음 단계로 넘어가는 신호가 들어 있어요.
+
+하루 동안은 같은 버전을 써요. 하루가 끝나면 그날의 관찰, 결과, 거주자 반응으로 고친 버전을 만들어요. 형식, 상태 참조, 할 일 목록 검사를 통과해야 다음 날부터 쓰고, 통과하지 못하면 마지막으로 통과한 버전을 계속 써요. 직접 받은 반응과 짐작한 반응은 따로 기록하고, 모델 가중치는 바꾸지 않아요.
+
+## 기록
+
+작업 ID와 대상 ID로 관찰, 질문, 답, 선택, 허락, 실행, 완료 확인을 모두 이어요. 왜 그랬는지 물으면 이 기록으로 답해요. 결과가 예상과 다를 때도 빠짐없이 남겨요.
