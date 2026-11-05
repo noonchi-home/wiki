@@ -2,7 +2,36 @@
 
 ## 01. PAM Four-Day Routine Experiment
 
-We tested PAM on four days of real routine videos: two days of a study routine and two days of an evening routine. Every second, a VLM (Qwen3.5-27B) looks at the PAM memory and recent photos and picks one kind of help. At the end of each day, it updates the memory from that day's photos. We ran the same videos with and without memory.
+PAM (Procedural Assistance Memory) is a memory of a user's activity phases and the help to give in each phase. A VLM reads recent photos together with this memory and either picks one kind of help or waits. At the end of each day, it revises the memory from that day's photos (self-reflection). We used four days of routine videos we filmed ourselves to compare whether the VLM picks the right help at the right time with and without memory.
+
+### Routines and Videos
+
+We filmed two routines. Each day's video joins scenes at the desk, at the room light switch, and in bed, all from one camera. Two days of routine A (A1, A2) are followed by two days of routine B (B1, B2).
+
+| Routine | The day |
+| --- | --- |
+| A (study) | Looks at the phone, puts it down, and brings a book to read. Brings a cup and drinks while reading, then closes the book and carries the book and cup out. Brings a laptop and a canned drink to work, then closes the laptop and clears both away. Turns off the room light on the way out, and turns off the bedside lamp after using the phone in bed. |
+| B (evening) | Looks at the phone, puts it down, pulls the vitamin bottle over, and brings a cup to take the vitamins. Eats from a bowl while drinking from the cup, then clears the bowl and cup. Turns off the room light, and turns off the bedside lamp in bed. |
+
+### Method
+
+| Item | Details |
+| --- | --- |
+| Choosing actions | Every second, the model sees up to 9 recent photos (1 second apart) and the day's memory, and picks one action or waits. Extra reasoning is off and the temperature is 0.3. |
+| Self-reflection | At the end of each day, it builds or revises the memory from 200 photos, with extra reasoning on. The first day (A1) starts with no memory, and reflection builds the first one. |
+| Conditions | FSM memory (phases with transitions between them), list memory (condition and action pairs only, no phases), no memory |
+| Ten actions | Bring the cup, can, or book next to the person; put the cup or bowl in the dishwasher; put the can or book in its storage spot; turn off the room light; turn off the bedside lamp; put the bedside lamp away (a wrong option with no matching scene) |
+| Model and server | Qwen3.5-27B (BF16), vLLM 0.33.0, one 80 GB H100 |
+
+**Answer key.** Every second has a correct answer, used only for scoring and never shown to the model.
+
+- If something the person needs isn't there yet, bring it next to them. This runs from the first sign (putting the phone down, opening a book to read, setting a bowl down to eat) until the person brings it themselves.
+- If a used item is still beside the person, clear it away. This runs from when they finish with it until they carry it out.
+- After the person clears everything and leaves for the last time, turn off the room light. After they put the phone down in bed, turn off the bedside lamp.
+- Otherwise, do nothing.
+- Deliveries are counted separately: on time if given before the person gets up to fetch the item, late if given after they get up but before they return, and missed if never given.
+
+### Results
 
 | Day | With memory (FSM) | Without memory |
 | --- | --- | --- |
@@ -10,11 +39,42 @@ We tested PAM on four days of real routine videos: two days of a study routine a
 | Evening, day 1 (routine changed) | 0.27 | 0.00 |
 | Evening, day 2 | 0.25 | 0.08 |
 
-The numbers are F1 scores for picking the right action, where 1 is perfect.
+The numbers are F1 scores for picking the right action, where 1 is perfect. Each condition ran once.
 
-- **Memory helped every day, but accuracy stayed low.** F1 ranged from 0.25 to 0.41, and of the 7 times something had to be brought to the resident, it was on time only twice.
-- **After the routine changed, the end-of-day update erased every rule from the earlier routine.** Going back to the study routine means learning it again from scratch.
-- **It often misread the photos.** It took the vitamin bottle on the desk for a can and kept choosing to put away a can that wasn't there that day.
+- **With memory, it did much better.** FSM memory scored higher than no memory every day, and its first correct action came sooner (study day 2: 3.9 s vs 13.0 s; evening day 2: 5.5 s vs 12.5 s).
+- **Memory still helped on the day the routine changed.** On evening day 1, FSM memory chose to turn off the room light 2 seconds into that window and the bedside lamp right away. Without memory, it chose neither.
+- **FSM memory and list memory were close.** Their F1 scores differed by 0.03–0.07. Running the first day twice on identical input also gave F1 scores of 0.04 and 0.15, 0.11 apart.
+- **On time:** On study day 2, FSM memory brought the cup at 32 seconds, inside its 28–70 second window, and chose putting the can away, turning off the light, and turning off the lamp each within 1 second. On evening day 2, it brought the cup during the meal 1 second after the window opened.
+- **Missed:** Every condition missed the cup for the vitamins in routine B.
+- **Wrong choices:** On evening day 1, FSM memory followed routine A and chose "bring the book" twice. Without memory, it chose "put the can away," which never happens on B days, 8 times on each B day, often taking the black vitamin bottle on the desk for a can.
+
+### How the Memory Changed (FSM)
+
+| Reflection | Phases / rules | What changed |
+| --- | --- | --- |
+| After A1 (built, 438 s) | 6 / 8 | Book when seated, cup when reading starts, cup to the dishwasher when the book closes, can when typing, can to the trash when the laptop closes, light off when heading to the switch, lamp off when the phone goes down. It also made "bring the laptop," which isn't on the action list. |
+| After A2 (revised, 313 s) | 6 / 8 | The rules stayed and only the conditions widened, for example "cup when looking at the book or leaving the desk." |
+| After B1 (revised, 200 s) | 5 / 6 | Every routine A rule (book, laptop, can) was deleted. Cup and bowl when seated, and bowl and cup to the dishwasher after eating; turning off the light and the lamp stayed. No vitamin rule appeared. |
+
+List memory kept the routine A rules after B1 and added "bowl to the dishwasher when the person leaves it and gets up," for 9 rules. In the paper, the original routine's phases and rules stayed after the first day of a changed routine, and only the changed rules were revised.
+
+### Run Details
+
+| Item | Value |
+| --- | --- |
+| Choosing one action | 4.4–5.5 s, about 2,700–3,700 input tokens |
+| One reflection | 200–438 s, 45,717–53,096 input tokens, 8,186–15,031 output tokens |
+| GPU cost | About $3.5 for FSM and no memory, about $4.3 for list memory (H100 at $4.01 per hour) |
+
+### Differences from the Paper
+
+| Item | Paper | This experiment |
+| --- | --- | --- |
+| Video | Filmed at a desk | One camera, with desk, switch, and bed scenes joined |
+| Photos per choice | 5, 2 seconds apart | 9, 1 second apart |
+| Days per routine | 5 | 2 |
+| Windows with two correct answers | One correct answer per photo | Either answer counts |
+| Repetition | Ranges over several runs | One run per condition |
 
 ## 02. Photo Security Structure
 
