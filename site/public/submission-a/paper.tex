@@ -1,0 +1,141 @@
+% !TeX root = main.tex
+% Shared bilingual source. main.tex is English; main-ko.tex is Korean.
+\newif\ifKorean
+\ifdefined\KoreanVersion\Koreantrue\else\Koreanfalse\fi
+\documentclass[conference,a4paper]{IEEEtran}
+\usepackage{fontspec}
+\setmainfont{texgyretermes-regular.otf}[
+  BoldFont=texgyretermes-bold.otf,
+  ItalicFont=texgyretermes-italic.otf,
+  BoldItalicFont=texgyretermes-bolditalic.otf]
+\ifKorean\usepackage{kotex}\fi
+\usepackage{cite}
+\usepackage{tabularx}
+\usepackage[hidelinks]{hyperref}
+\newcommand{\bi}[2]{\ifKorean#1\else#2\fi}
+\renewcommand{\refname}{\bi{참고문헌}{REFERENCES}}
+\newcommand{\req}[3]{\par\noindent\textbf{#1.} \bi{#2}{#3}\par\smallskip}
+\newcommand{\roleheader}[3]{\textbf{#1} & \textbf{#2} & \textbf{#3} \\ \hline}
+\newcommand{\role}[4]{#1 & #2 & \bi{#3}{#4} \\ \hline}
+\title{\bi{메타인지 기반 공감지능 스마트홈}{A Metacognition-Based Empathetic Smart Home}}
+\author{
+\IEEEauthorblockN{\bi{허정오}{Jeong-O Heo}}
+\IEEEauthorblockA{\footnotesize\bi{정보시스템학과\\한양대학교\\대한민국 서울}{Department of Information Systems\\Hanyang University\\Seoul, South Korea}}
+\and
+\IEEEauthorblockN{\bi{신지훈}{Jihun Shin}}
+\IEEEauthorblockA{\footnotesize\bi{정보시스템학과\\한양대학교\\대한민국 서울}{Department of Information Systems\\Hanyang University\\Seoul, South Korea}}
+\and
+\IEEEauthorblockN{\bi{박석준}{Seokjun Park}}
+\IEEEauthorblockA{\footnotesize\bi{정보시스템학과\\한양대학교\\대한민국 서울}{Department of Information Systems\\Hanyang University\\Seoul, South Korea}}
+\and
+\IEEEauthorblockN{\bi{김준형}{Junhyeong Kim}}
+\IEEEauthorblockA{\footnotesize\bi{정보시스템학과\\한양대학교\\대한민국 서울}{Department of Information Systems\\Hanyang University\\Seoul, South Korea}}
+}
+\begin{document}
+\maketitle
+\begin{abstract}
+\bi{가사 지원 에이전트는 집안일의 수행과 함께 그 행동이 지금 사용자에게 도움이 되는지를 판단해야 한다. 같은 컵도 재사용 의사에 따라 정리 여부가 달라지며, 부족한 정보를 모두 사용자에게 되묻는 방식은 확인 부담을 만든다. 본 프로젝트는 확인한 사실과 모르는 정보를 구분하는 메타인지와, 사용자의 의사·생활 상황·개입 부담을 고려하는 공감지능을 결합한 스마트홈 에이전트를 제안한다. 에이전트는 필요한 관찰·질문을 선택하고 행동과 대기의 예상 결과를 비교하며, 실행 결과가 예상과 다르면 판단을 재검토한다.}{A household-assistance agent must judge whether an action helps the resident at that moment as well as perform the task. Whether a cup should be cleared depends on reuse intentions, while asking the resident about every missing detail creates interaction burden. This project proposes a smart-home agent combining metacognition, which distinguishes established facts from missing information, with empathetic intelligence, which considers resident intentions, living context, and intervention burden. The agent selects necessary observations and questions, compares the predicted outcomes of acting and waiting, and reconsiders decisions when execution outcomes differ from predictions.}
+\bi{팀원은 요청한 장면을 촬영하고 선택한 행동은 디지털 트윈에서 실행한다. 대표 과업은 사용 종료와 허용을 확인한 컵의 음료 비우기, 식기세척기 적재·작동, 해당 컵의 세척 완료 확인이다. 세척기 대기 중에는 원래 목표를 유지하며 다른 식기를 확인하고 다음 회차를 준비한다. 인덕션 안전, 부재 후 귀가 보고, 새 상황 조합의 계획도 다룬다. 비교 평가는 과업 완료와 잘못된 실행, 질문·촬영 요청 부담을 함께 검토한다.}{Team members capture requested scenes, and selected actions are executed in a digital twin. The representative task checks end of use and authorization, empties remaining drink when needed, loads and starts a dishwasher, and verifies washing of the target cup. While waiting for the dishwasher, the agent retains the original goal, checks other dishes, and prepares the next cycle. The scope also covers cooktop safety, return-home reporting, and planning for novel combinations. Comparative evaluation examines task completion, incorrect executions, and the burden of questions and capture requests.}
+\end{abstract}
+
+\section*{\bi{학기 중반까지의 역할 분담}{Role Assignments (till the middle of the term)}}
+\bi{팀원의 역할과 주요 수행 업무는 다음과 같다.}{The team members' roles and primary responsibilities are as follows.}
+
+% BEGIN ROLE TABLE
+\par\addvspace{\baselineskip}
+\begingroup
+\footnotesize
+\setlength{\tabcolsep}{3pt}
+\renewcommand{\arraystretch}{1.2}
+\noindent
+\begin{tabularx}{\columnwidth}{|>{\raggedright\arraybackslash}p{0.24\columnwidth}|>{\raggedright\arraybackslash}p{0.26\columnwidth}|>{\raggedright\arraybackslash}X|}
+\hline
+\roleheader{\bi{역할}{Roles}}{\bi{이름}{Name}}{\bi{수행 업무 등}{Task description and etc.}}
+\role{User}{\bi{신지훈}{Jihun Shin}}{생활 사례·사용 의사·예외 상황과 사용성 피드백.}{Provide household scenarios, intentions, exceptions, and usability feedback.}
+\role{Customer}{\bi{김준형}{Junhyeong Kim}}{문제·범위·우선순위·수용 기준 검토.}{Review the problem, scope, priorities, and acceptance criteria.}
+\role{Software developer}{\bi{박석준}{Seokjun Park}}{입출력·요구사항·제약·시험 항목 구체화와 이후 설계·구현·시험.}{Specify inputs, outputs, requirements, constraints, and verification cases; subsequently design, implement, and test.}
+\role{Development manager}{\bi{허정오}{Jeong-O Heo}}{일정·진척·변경·통합·제출물 관리.}{Coordinate schedules, progress, changes, integration, and deliverables.}
+\end{tabularx}
+\endgroup
+% END ROLE TABLE
+
+\section{\bi{서론}{INTRODUCTION}}
+\bi{가정에서의 도움은 물건이나 가전의 상태와 사용자의 의사를 함께 고려해야 한다. 사용자가 컵을 놓고 자리를 떠도 다시 마실 예정일 수 있고, 주방을 벗어나도 조리를 계속할 수 있다. 컵이 보이거나 사람이 없다는 조건만으로 정리하거나 인덕션을 끄면 사용자의 생활을 방해할 수 있다. 반대로 명령만 기다리면 도울 순간을 놓치고, 모든 판단을 사용자에게 되물으면 집안일을 맡긴 뒤에도 계속 지시하고 확인해야 한다. 이러한 상황에서 필요한 것은 도움의 필요성을 알아차리고, 무엇을 더 확인할지와 언제 행동하거나 기다릴지를 정하는 판단이다.}{Household assistance requires considering both the state of objects or appliances and the resident's intentions. A resident who leaves a cup may intend to drink again, and one who leaves the kitchen may still be cooking. Clearing a visible cup or switching off a cooktop solely because nobody is nearby can disrupt ongoing activities. Conversely, waiting only for commands can miss opportunities to help, while referring every decision to the resident requires continued instruction and supervision. These situations call for judgment about when help is needed, what further information to obtain, and when to act or wait.}
+
+\subsection{\bi{주제 선정 이유와 핵심 개념}{Motivation and Key Concepts}}
+\bi{본 프로젝트에서 메타인지는 확인한 사실과 모르는 정보를 구분하고, 필요한 관찰·질문을 선택하며, 예상과 실행 결과가 다르면 판단을 수정하는 능력이다. 컵을 발견해도 내부가 보이지 않으면 다른 각도의 촬영을 요청한다. 사진으로 알 수 없는 재사용 의사는 사용자에게 확인하고, 유효한 이전 답변은 다음 판단에 이어 쓴다.}{In this project, metacognition is the ability to distinguish established facts from unknown information, select necessary observations and questions, and revise judgments when execution outcomes differ from predictions. When a cup's interior is hidden, the agent requests another viewing angle. It asks the resident about reuse intentions that an image cannot establish and carries valid previous answers into subsequent decisions.}
+
+\bi{공감지능은 사용자의 의사·생활 상황·개입 부담을 고려해 돕는 방식과 시점을 고르는 능력이다. 다시 쓸 컵은 그대로 두고, 급하지 않은 확인이 생활을 방해하는지도 고려한다. 행동이 가능한지와 함께 지금 행동하거나 질문하는 것이 적절한지를 판단하는 것이다. 메타인지가 필요한 확인과 판단 수정을 맡고, 공감지능이 이를 사용자의 생활에 맞추는 기준을 제공한다. 이 두 능력을 연결하기 위해 메타인지 기반 공감지능을 주제로 선택했다.}{Empathetic intelligence is the ability to choose how and when to help by considering resident intentions, living context, and intervention burden. The agent leaves a cup intended for reuse in place and considers disruption when requesting nonurgent clarification. It judges the appropriateness of acting or asking now alongside task feasibility. Metacognition supports necessary checks and revision of judgments, while empathetic intelligence supplies criteria for fitting these to the resident's life. The project adopts metacognition-based empathetic intelligence to connect these abilities.}
+
+\bi{목표는 거주자의 생활을 존중하며 허용된 일을 끝까지 이어가는 미래 CLOiD의 판단 시제품이다. 관찰·확인·예측·선택·실행·결과 점검을 반복하고, 축적한 경험으로 확인과 계획을 개선한다. 이번 프로젝트에서는 팀원이 요청받은 장면을 촬영하고 디지털 트윈이 선택한 행동과 결과를 보여준다.}{The objective is a prototype of the decision-making component of a prospective CLOiD system that respects residents' activities and carries authorized work through to completion. It repeats observation, clarification, prediction, selection, execution, and outcome checking, using accumulated experience to improve checks and planning. Team members capture requested scenes, and a digital twin presents the selected actions and outcomes.}
+
+\subsection{\bi{사용자 요구와 산출물}{User Needs and Deliverables}}
+\bi{사용자에게 제공할 결과는 다음과 같다.}{The intended resident-facing outcomes are:}
+\begin{itemize}
+\item \bi{사용 의사와 허용에 맞는 실행 또는 이유 있는 대기.}{Action consistent with intentions and authorization, or waiting with a stated reason.}
+\item \bi{유효한 이전 정보를 이어 쓰며 필요한 것만 확인하는 상호작용.}{Interaction that reuses valid information and requests only necessary clarification.}
+\item \bi{해당 컵의 세척 완료·미완료와 그 이유를 확인할 수 있는 결과 표시.}{A report of whether the target cup has been washed, remains unfinished, or is waiting, with supporting reasons.}
+\end{itemize}
+\bi{팀의 산출물은 이 과정을 보여주는 시제품, 관찰부터 결과까지 연결된 기록, 비교 평가와 실패 사례, 재현 안내다.}{Planned deliverables are a prototype demonstrating this process, records linking observations to outcomes, comparative evaluation and failure cases, and reproduction instructions.}
+
+\subsection{\bi{관련 연구}{Related Work}}
+\bi{KnowNo는 계획의 불확실성을 보정해 필요한 경우 사람의 도움을 요청한다}{KnowNo calibrates planning uncertainty and requests human help when needed}~\cite{knowno}.
+\bi{PACT는 관찰과 상호작용 이력으로 질문 여부를 결정하며 도움 정확도와 질문 부담을 함께 평가한다}{PACT uses observations and interaction history to decide whether clarification is needed and evaluates accuracy together with clarification burden}~\cite{pact}.
+\bi{본 과제는 이러한 관련 개념을 정한 생활 과업의 관찰 요청·허용 확인·가상 계획과 실행으로 연결하고, 과업 완료와 개입 부담을 함께 평가한다.}{This course project connects these concepts through observation requests, authorization checks, and virtual planning and execution for the defined household tasks, evaluating task outcomes alongside intervention burden.}
+
+\section{\bi{프로젝트 범위}{PROJECT SCOPE}}
+\subsection{\bi{시스템 경계}{System Boundary}}
+\bi{이번 개발 대상은 미래 CLOiD의 판단 부분이다. 실제 장면에서는 요청한 사진·영상과 사용자 답변을 받고 팀원이 촬영을 지원한다. 행동은 가상 집에서 수행하며 실제 로봇이나 가전을 제어하지 않는다.}{The development target is the decision-making component of a prospective CLOiD system. Real-scene demonstrations use requested images or video and user answers, with capture supported by a team member. Actions occur in the virtual home; physical robots and appliances are outside the execution scope.}
+\subsection{\bi{시나리오}{Scenarios}}
+\begin{enumerate}
+\item \bi{컵 정리: 음료 비우기, 식기세척기 적재·작동, 해당 회차의 세척 완료 확인.}{Cup cleaning: authorized disposal, dishwasher loading and activation, and completion verification for the relevant cycle.}
+\item \bi{인덕션 안전: 조리·복귀 의사·알림 응답과 사전 허용에 따른 알림·대기·가상 끄기.}{Cooktop safety: notification, waiting, or virtual shutdown based on context, return intention, responses, and prior authorization.}
+\item \bi{부재 후 귀가: 부재 중 가상으로 수행하거나 보류한 일을 귀가 시 요약.}{Return home: summarizing virtual actions and deferred work after the resident returns.}
+\item \bi{처음 보는 상황의 계획: 컵·사용 의사·가전 상태의 새 조합에서 관찰·질문·행동·대기 선택.}{Novel combinations: selecting observations, questions, actions, and waiting under new combinations of cups, intentions, and appliance states.}
+\end{enumerate}
+\bi{가상 사용자와 관측 인터페이스를 둔 생활 환경에서 경험을 축적하고 학습 전후를 비교한다. 숨은 정답은 온라인 판단에 직접 주지 않는다.}{Experience will be collected in a virtual living environment with simulated residents and an observation interface, followed by a before-and-after learning comparison. Hidden truth is not directly supplied to online decisions.}
+
+\bi{집 전체의 모든 집안일, 새 행동의 발명, 여러 가족 간 의사 충돌, 빨래는 제외한다. 여러 집안일의 장시간 연결과 실행 중인 동작 자체를 중단·변경하는 복잡한 계획 수정은 이후 확장이다.}{Excluded topics are unrestricted household work, invention of new action types, conflicting intentions among multiple residents, and laundry. Long-duration plans across diverse chores and complex changes to actions already in execution are deferred.}
+
+\section{\bi{요구사항}{REQUIREMENTS}}
+\subsection{\bi{공통 동작 요구}{Common Behavior}}
+\bi{시스템은 도움이 필요한 순간과 부족한 정보를 구분하고 필요한 관찰이나 답변을 요청해야 한다. 확보한 정보와 허용으로 대안의 예상 결과를 비교하고 가상 실행 또는 대기를 선택해야 한다. 필요한 확인·선택 근거·실행 결과·예측과 다른 결과를 기록하고 사용자 질의에 이유를 설명해야 한다. 가상 실행 결과와 실제 장면의 변화를 구분해야 한다.}{The system shall identify assistance opportunities and missing information, request necessary observations or answers, compare alternatives using available information and authorization, and select virtual execution or waiting. It shall record checks, decision reasons, outcomes, and prediction discrepancies, explain decisions when asked, and distinguish virtual outcomes from physical-scene changes.}
+
+\subsection{\bi{UC-01: 컵 세척의 연속 흐름}{UC-01: Continuous Cup-Cleaning Flow}}
+\bi{사용자가 컵을 놓고 자리를 뜨는 장면이 계기다. 이 사실만으로 사용 종료를 단정하지 않는다. 내용물·재사용 의사·허용을 확인하고 필요한 경우 음료를 비운 뒤 식기세척기에 넣어 작동한다. 해당 컵의 세척 완료가 목표의 완료 기준이다.}{The use case begins when a resident leaves a cup and moves away. This does not establish that use has ended. After checking contents, reuse intention, and authorization, the agent empties remaining drink when appropriate, loads the dishwasher, and starts it. The goal is complete only after confirming washing of that cup.}
+
+\bi{식기세척기가 작동 중이면 원래 목표를 유지하며 다른 설거지거리를 찾고 관찰·의사·허용을 확인한다. 현재 회차가 끝나면 적재 공간과 사용 가능 조건을 재확인하고 준비된 원래 컵과 허용된 추가 식기를 다음 회차에 처리한다. 추가 탐색이 원래 목표를 계속 지연시키지 않아야 한다.}{If a cycle is running, the agent retains the original goal while searching for other dishes and checking observations, intentions, and authorization. After that cycle finishes, it rechecks space and availability and washes prepared original and additional authorized items in a subsequent cycle. Additional search shall not indefinitely defer the original goal.}
+
+\subsection{\bi{컵 세척 기능 요구사항}{Cup-Cleaning Functional Requirements}}
+\req{CUP-01}{시스템은 입력 장면에서 대상 컵과 사용 상황을 해석하고 해석할 수 없는 항목을 구분해야 한다.}{The system shall interpret the target cup and its usage context from input observations and distinguish information that cannot be determined.}
+\req{CUP-02}{시스템은 컵 정리에 필요한 정보가 부족할 때 확인 대상과 목적을 담은 관찰 요청을 생성해야 한다.}{The system shall generate an observation request identifying the information needed and the purpose of the request when cup-cleaning information is insufficient.}
+\req{CUP-03}{시스템은 사용자 의사나 허용이 필요한 경우 질문하고 답변을 판단에 반영해야 한다.}{The system shall ask the resident when intention or authorization is required and incorporate the answer into its decision.}
+\req{CUP-04}{시스템은 확보한 정보와 적용 가능한 허용을 바탕으로 정리·대기 등 대안을 비교해야 한다.}{The system shall compare alternatives, including cleaning and waiting, using the information obtained and applicable authorization.}
+\req{CUP-05}{시스템은 사용 중·재사용 예정 또는 정리 허용이 확인되지 않은 컵을 가상 정리하지 않아야 한다.}{The system shall not virtually clear a cup that is in use, intended for reuse, or lacks the required cleaning authorization.}
+\req{CUP-06}{시스템은 실행 전 관련 새 정보가 도착하면 미실행 계획을 재검토해야 한다.}{The system shall reconsider an unexecuted plan when relevant new information arrives before execution.}
+\req{CUP-07}{시스템은 선택한 컵 정리 계획의 음료 비우기·식기세척기 적재·작동·세척을 디지털 트윈에서 실행하고 진행·성공·실패를 구분해야 한다.}{The system shall execute the selected virtual plan, including emptying remaining drink when needed, loading the dishwasher, starting a cycle, and washing, while distinguishing progress, success, and failure.}
+\req{CUP-08}{시스템은 관찰 요청·질문·답변·선택·근거·결과를 기록하고 사용자 질의에 이유를 설명해야 한다.}{The system shall record observation requests, questions, answers, decisions, reasons, and results, and explain a decision from that history when asked.}
+\req{CUP-09}{시스템은 대상 컵이 포함된 식기세척기의 가상 세척 과정이 완료된 것을 확인한 경우에만 컵 정리 완료를 보고해야 한다.}{The system shall report completion only after confirming the completion of the virtual wash cycle that contains the target cup.}
+\req{CUP-10}{시스템은 음료가 남은 컵을 정리할 때 사용 종료와 필요한 폐기 허용을 확인하고, 음료를 비운 뒤 식기세척기에 적재해야 한다.}{The system shall confirm that use has ended and that required disposal is authorized before emptying remaining drink and loading the cup.}
+\req{CUP-11}{시스템은 식기세척기에 적재·작동하기 전에 필요한 사용 가능 조건을 확인해야 한다.}{The system shall check the necessary availability conditions before loading or starting the dishwasher.}
+\req{CUP-12}{시스템은 식기세척기 대기 중에도 기존 컵의 미완료 목표·확인 정보·허용·대기 이유를 유지해야 한다.}{The system shall retain the original cup's unfinished goal, confirmed information, authorization, and waiting reason while the dishwasher is busy.}
+\req{CUP-13}{시스템은 대기 중 다른 설거지거리를 탐색할 수 있어야 하며, 필요한 관찰과 사용 의사·허용을 확인해 다음 회차 후보를 구성해야 한다.}{The system shall be able to search for other dishes while waiting and establish subsequent-cycle candidates through necessary observations, usage-intention checks, and authorization.}
+\req{CUP-14}{시스템은 기존 회차 완료 후 사용 가능 조건을 다시 확인하고 준비된 대상의 다음 회차 세척을 재개해야 한다.}{The system shall recheck availability after the current cycle finishes and resume washing prepared items in a subsequent cycle.}
+\req{CUP-15}{시스템은 다음 회차 재개 시 각 대상의 최신 조건을 재검사하고, 추가 탐색·미응답 후보 때문에 준비된 기존 목표가 계속 지연되지 않도록 해야 한다.}{The system shall recheck each item's current conditions before the subsequent cycle and shall not repeatedly defer a prepared original goal solely because additional search or candidate answers remain unfinished.}
+\section{\bi{검증 계획}{VERIFICATION PLAN}}
+\subsection{\bi{수용 사례와 비교}{Acceptance Cases and Comparisons}}
+\bi{컵 세척 검증은 수용 사례 18개를 대상으로 한다. 정상 세척, 재사용 의사, 허용 부재, 관찰 불가, 실행 전 변화, 무응답, 세척 실패, 이전 회차 완료 오인, 대기 중 탐색·재개를 확인한다.}{Cup-cleaning verification covers 18 acceptance cases addressing normal washing, reuse, missing authorization, unavailable observations, changes before execution, nonresponse, failure, incorrect attribution of an earlier cycle, and search and resumption while waiting.}
+
+\bi{확인 없이 바로 행동하는 방식보다 잘못된 실행을 줄일 수 있는지, 모든 정보를 묻는 방식보다 오류를 늘리지 않으면서 확인 부담을 줄일 수 있는지 검증한다. 이전 의사와 학습을 쓰지 않는 방식도 비교한다.}{The evaluation will examine whether necessary checks reduce incorrect executions relative to acting without clarification, and whether selective requests reduce burden relative to asking about all information without increasing errors. A comparison omitting prior intentions and learning is also planned.}
+
+\bi{같은 초기 관찰·공개 정보·허용 행동에서 비교를 시작한다. 잘못된 실행과 허용 위반, 질문 수, 촬영 요청 수, 동일 정보의 재요청, 완료·대기·실패를 함께 기록한다. 컵 완료는 대상과 실제 적재된 가상 세척 회차를 연결해 판정한다. 새 상황의 계획 성공과 설명 이해도도 검토한다.}{Comparisons start from the same initial observations, public information, and allowed actions. Records include incorrect executions and authorization violations, questions, capture requests, repeated requests for the same information, and completed, waiting, or failed outcomes. Cup completion is determined by linking the target to its actual virtual wash cycle. Planning success on new combinations and explanation comprehension will also be examined.}
+
+\bi{관찰·답변, 확인한 사실과 미확인, 요청 목적, 후보·선택 이유, 실행 결과와 완료 판정을 연결해 주장의 근거를 남긴다. 경험 학습은 학습에 쓰지 않은 상황에서 전후를 비교하며, 기존 의사 기록의 재사용과 학습에 따른 변화를 구분해 평가한다.}{Evidence will link observations and answers, established facts and unknowns, request purposes, alternatives and decision reasons, execution results, and completion judgments. Learning will be compared before and after experience using situations excluded from training, with evaluation designed to distinguish reuse of intention records from learned changes.}
+
+\subsection{\bi{검증 범위}{Validation Scope}}
+\bi{실제 장면 시험은 사진·영상의 해석과 요청·응답을 확인하고, 가상 생활 환경은 계획·목표 유지·세척 완료·학습을 확인한다. 물리적 로봇·가전의 제어 성능은 이번 검증 범위에서 제외한다.}{Real-scene trials will assess media interpretation and request-response interaction, while the virtual living environment will assess planning, goal retention, washing completion, and learning. Physical robot and appliance control performance is outside the scope of this evaluation.}
+\begin{thebibliography}{00}
+\bibitem{knowno} A. Z. Ren et al., \emph{Robots That Ask For Help: Uncertainty Alignment for Large Language Model Planners}, arXiv:2307.01928, 2023. [Online]. Available: \url{https://arxiv.org/abs/2307.01928}
+\bibitem{pact} C. He et al., \emph{PACT: Proactive Asking for Continual Task Assistance in Human-Robot Collaboration}, arXiv:2605.24350, 2026. [Online]. Available: \url{https://arxiv.org/abs/2605.24350}
+\end{thebibliography}
+\end{document}

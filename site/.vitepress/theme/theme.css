@@ -1,0 +1,51 @@
+:root {
+  --vp-font-family-base: 'Noto Sans KR', 'Malgun Gothic', system-ui, sans-serif;
+  --vp-c-brand-1: #a1143e;
+  --vp-c-brand-2: #b92a51;
+  --vp-c-brand-3: #971238;
+  --vp-c-brand-soft: rgb(161 20 62 / 9%);
+  --vp-c-bg: #fffcf8;
+  --vp-c-bg-alt: #f8f2ea;
+  --vp-c-bg-soft: #f6efe6;
+  --vp-c-divider: #e7dbce;
+  --wiki-cream: #f2e4d3;
+}
+.dark {
+  --vp-c-brand-1: #ff8fab;
+  --vp-c-brand-2: #ffa4ba;
+  --vp-c-brand-3: #b63459;
+  --vp-c-brand-soft: rgb(255 143 171 / 14%);
+  --vp-c-bg: #201b1d;
+  --vp-c-bg-alt: #272123;
+  --vp-c-bg-soft: #302629;
+  --vp-c-divider: #483b3e;
+  --wiki-cream: #503c3a;
+}
+.VPNavBarTitle .title {
+  letter-spacing: .11em;
+  font-weight: 850;
+}
+.VPNavBarTitle .logo {
+  width: 34px;
+  height: 34px;
+  object-fit: contain;
+  margin-right: 9px;
+  border-radius: 9px;
+  background: var(--wiki-cream);
+}
+.VPSidebar .group {
+  padding-bottom: 9px;
+}
+.vp-doc h1, .vp-doc h2, .vp-doc h3 {
+  word-break: keep-all;
+  overflow-wrap: break-word;
+}
+.vp-doc a {
+  text-underline-offset: .2em;
+}
+* {
+  scrollbar-width: none;
+}
+*::-webkit-scrollbar {
+  display: none;
+}
