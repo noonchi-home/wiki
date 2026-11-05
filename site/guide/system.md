@@ -1,41 +1,41 @@
-# 시스템 구조
+# System Architecture
 
-## 구성
+## Components
 
-| 구성 | 기술 스택 | 하는 일 |
+| Component | Tech stack | Role |
 | --- | --- | --- |
-| 폰(클로이드의 눈) | 안드로이드 크롬, WebXR, WebCodecs(H.264), WebSocket | 자기 위치를 알고, 카메라 화면과 상태를 보내고, 시연자에게 할 일을 보여 줘요 |
-| twin-home(집 허브) | Node.js 22, TypeScript, matter.js, React, three.js, ThinQ API | 트윈 상태를 들고, 단계를 확인하고 실행하고, ThinQ와 가상 기기를 다루고, 대시보드를 띄워요 |
-| PAM 모델 | Python, Qwen3.5-27B, vLLM | 최근 사진과 그날의 기억을 읽고, 할 일 하나나 「기다림」을 돌려줘요 |
-| 관찰 서버 | Python 3.11, YOLO26n, SQLite, AES-256-GCM, TLS 1.3 | 화면과 가전 상태를 모으고, 아무 일 없는 구간은 건너뛰고, 이력을 쌓아요 |
+| Phone (CLOiD's eye) | Android Chrome, WebXR, WebCodecs (H.264), WebSocket | Knows its own position, sends camera frames and state, and shows the demonstrator what to do |
+| twin-home (home hub) | Node.js 22, TypeScript, matter.js, React, three.js, ThinQ API | Holds the twin state, checks and runs steps, controls ThinQ and the virtual devices, and serves the dashboard |
+| PAM model | Python, Qwen3.5-27B, vLLM | Reads recent photos and the day's memory, and returns one action or "wait" |
+| Observation server | Python 3.11, YOLO26n, SQLite, AES-256-GCM, TLS 1.3 | Collects frames and appliance states, skips idle periods, and keeps the history |
 
-폰과 노트북은 Tailscale 사설망으로 이어지고, 등록한 시연용 폰만 허브에 닿을 수 있어요.
+The phone and the laptop connect over a private Tailscale network, and only the registered demo phone can reach the hub.
 
-## 판단 한 번의 흐름
+## One Decision, Step by Step
 
-1. **보기:** twin-home이 2초 간격으로 찍은 사진 5장(최근 8초)을 모아요.
-2. **제안 받기:** 사진, 그날의 PAM 기억, 할 수 있는 일 목록을 모델에 보내요. 모델은 할 일 번호나 -1(기다림)을 돌려줘요. 시간 초과, 요청과 맞지 않는 답, 목록 밖 번호는 오류로 남기고, 이미 진행 중인 목표는 그대로 둬요.
-3. **나누기:** 제안을 단계로 나눠요. 단계마다 앞선 조건, 가전 상태와 기능, 클로이드와 대상의 위치, 거주자가 원하는지와 허락했는지를 확인해요. 클로이드가 먼저 움직여야 하면 그 이동도 한 단계가 돼요.
-4. **견주기:** 후보마다 지금 상태의 사본에 효과를 적용해 보고, 하기와 기다리기를 예상 결과·방해 정도·늦어짐으로 견줘요.
-5. **실행:** 준비된 단계를 ThinQ, 가상 기기, 폰을 통한 시연자 중 쓸 수 있는 경로로 보내요. 기기마다 한 번에 한 단계만 다루고, 보내기 직전에 대상·상태·허락을 다시 확인해요. 실행 ID가 있어서 같은 일이 두 번 돌지 않아요.
-6. **확인:** 확인된 결과로만 트윈을 바꾸고 다음 단계를 봐요. 막힌 단계는 멈춘 까닭과 다시 할 조건을 남겨요. 거주자가 새로 답하거나 상태가 바뀌면 아직 시작하지 않은 단계를 고쳐요.
+1. **Observe.** twin-home collects five photos taken two seconds apart, covering the last eight seconds.
+2. **Get a proposal.** It sends the photos, the day's PAM memory, and the list of available actions to the model. The model returns an action number, or -1 to wait. A timeout, an answer that doesn't match the request, or a number outside the list is logged as an error, and goals already in progress stay active.
+3. **Break it down.** It splits the proposal into steps. For each step it checks the prerequisites, the appliance's state and capabilities, where CLOiD and the target are, and whether the resident wants it and has allowed it. If CLOiD has to move first, that move becomes a step of its own.
+4. **Compare.** It applies each option's effects to a copy of the current state and weighs acting against waiting by expected result, disruption, and delay.
+5. **Run.** It sends ready steps through whichever route is available: ThinQ, the virtual devices, or the demonstrator through the phone. Each device takes one step at a time, and the target, state, and permission are checked again right before sending. Execution IDs keep the same action from running twice.
+6. **Verify.** The twin changes only with a verified result, and then the next step is assessed. A blocked step records why it stopped and what lets it resume. When the resident answers or the state changes, steps that haven't started yet are revised.
 
-## 과제별 규칙
+## Task Rules
 
-**냉장고 문.** 문 상태와 폰 사진을 문 ID와 시각으로 짝지어요. 거주자가 재료를 꺼내는 중이거나, 냉장고로 돌아오거나, 문 앞이 가려지거나, 관찰이 끊기면 기다리고, 아직 하지 않은 안내는 취소해요. 문이 계속 열려 있고, 거주자가 조리대에서 일을 이어 가고, 문 주변이 비어 있으면 나서요. 폰이 시연자에게 작업 ID·문·할 일·까닭을 보여 줘요. ThinQ가 같은 문을 닫힘으로 읽거나 나중에 찍은 사진에 닫힌 문이 보이면 끝이고, 근거가 모자라면 「확인 안 됨」으로 남아요.
+**Refrigerator door.** NOONCHI matches the door state with phone photos by door ID and time. It waits while the resident is taking out ingredients, comes back to the refrigerator, blocks the view of the door, or observations stop, and it cancels any instruction not yet carried out. It steps in when the door stays open, the resident keeps working at the counter, and the area around the door is clear. The phone shows the demonstrator the task ID, the door, the action, and the reason. The task is done when ThinQ reads the same door back as closed or photos taken afterwards show it closed. Without enough evidence, it stays unverified.
 
-**컵.** 쓰는 중이거나, 다시 쓸 컵이거나, 치워도 된다는 허락이 없는 컵은 그대로 둬요. 안이 안 보이는데 그게 중요하면, 어느 컵을 왜 어떤 각도로 찍을지 밝혀 사진을 부탁해요. 씻기 전에는 다 마셨는지, 음료가 남았다면 버려도 되는지 확인해요. 식기세척기가 쉬고 있고 자리가 있을 때만 넣어요. 세척 회차마다 ID가 붙고, 그 회차가 이 컵을 씻었다고 알려야 끝이에요. 식기세척기가 돌고 있으면 컵은 목표·허락·기다리는 까닭을 그대로 들고 기다려요. 그사이 찾은 다른 그릇은 따로 확인하고, 첫 컵의 허락을 넘겨받지 않아요.
+**Cup.** NOONCHI leaves alone any cup that is in use, meant to be reused, or not cleared for cleaning. If it can't see inside and that matters, it asks for a photo and says which cup, why, and from what angle. Before washing, it confirms the resident is done and, if a drink is left, that it may pour it out. It loads the cup only when the dishwasher is idle and has room. Each wash cycle gets its own ID, and the task is done only when that cycle reports this cup washed. While the dishwasher is running, the cup keeps its goal, permission, and reason for waiting. Other dishes found in the meantime get their own checks and don't inherit the first cup's permission.
 
-**에어컨.** 거주자가 거실에서 쉬기 시작하면, 원하는 온도가 거주자가 허락한 범위와 기기가 지원하는 범위 안에 있는지 봐요. 지금 설정 온도가 다를 때만 ThinQ 명령을 보내고, 거주자가 거절하거나 기기 상태를 모르면 기다려요. ThinQ가 같은 에어컨에서 설정 온도를 다시 읽으면 끝이에요. 기기가 거부하면 실패이고, 받았지만 확인이 안 되면 「확인 안 됨」이에요.
+**Air conditioner.** When the resident starts resting in the living room, NOONCHI checks that the preferred temperature is within what the resident has allowed and what the unit supports. It sends a ThinQ command only if the current setpoint is different, and it waits if the resident refuses or the unit's state is unknown. The task is done when ThinQ reads the setpoint back from the same unit. A rejected command is a failure, and an accepted command without confirmation stays unverified.
 
-**함께 돌 때.** 기기마다 한 번에 한 단계만 다뤄요. 식기세척기가 돌고 있으면 컵 넣기는 기다리지만, 허락된 에어컨 조절은 따로 진행할 수 있어요.
+**Running together.** Each device takes one step at a time. While the dishwasher is running, loading the cup waits, but an allowed air conditioner change can still go ahead.
 
-## 기억
+## Memory
 
-PAM은 JSON으로 저장한 유한 상태 기계(FSM)예요. 활동 단계, 상황과 도울 일을 짝지은 규칙, 다음 단계로 넘어가는 신호가 들어 있어요.
+PAM is a finite-state machine (FSM) stored as JSON. It holds activity phases, rules that pair a situation with the help to offer, and the signs of moving to the next phase.
 
-하루 동안은 같은 버전을 써요. 하루가 끝나면 그날의 관찰, 결과, 거주자 반응으로 고친 버전을 만들어요. 형식, 상태 참조, 할 일 목록 검사를 통과해야 다음 날부터 쓰고, 통과하지 못하면 마지막으로 통과한 버전을 계속 써요. 직접 받은 반응과 짐작한 반응은 따로 기록하고, 모델 가중치는 바꾸지 않아요.
+The same version is used all day. At the end of the day, the day's observations, outcomes, and resident reactions produce a revised version. It takes effect the next day only if it passes the format, state reference, and action list checks. Otherwise the last version that passed stays in use. Direct feedback and inferred reactions are recorded separately, and model weights never change.
 
-## 기록
+## Records
 
-작업 ID와 대상 ID로 관찰, 질문, 답, 선택, 허락, 실행, 완료 확인을 모두 이어요. 왜 그랬는지 물으면 이 기록으로 답해요. 결과가 예상과 다를 때도 빠짐없이 남겨요.
+Task and target IDs link every observation, question, answer, choice, permission, execution, and completion check. When you ask why something happened, NOONCHI answers from this record. It also records every time an outcome differs from what it expected.

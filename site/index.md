@@ -1,26 +1,26 @@
-# 프로젝트 개요
+# Project Overview
 
-NOONCHI는 LG 홈로봇 클로이드(CLOiD)를 위한 판단 시제품이에요. 거주자에게 도움이 필요한 순간을 알아채고, 아직 모르는 것을 확인한 뒤, 할지 기다릴지 정해요. 폰이 클로이드의 눈, 노트북이 집 허브가 되고, 클로이드의 손은 사람이 대신해요.
+NOONCHI is a decision prototype for CLOiD, LG's home robot. It notices when a resident could use help, checks what it doesn't know yet, and then decides whether to act or wait. A phone serves as CLOiD's eyes, a laptop as the home hub, and a person stands in for CLOiD's hands.
 
-## 시연에서 보게 될 것
+## What You See in the Demo
 
-거주자 한 명이 요리하고, 밥을 먹고, 쉬는 동안 NOONCHI가 세 가지 일을 맡아요.
+One resident cooks, eats, and then rests. NOONCHI takes care of three tasks along the way.
 
-| 할 일 | 언제 나서나 | 누가 하나 | 끝났다고 보는 때 |
+| Task | When NOONCHI steps in | Who carries it out | When it counts as done |
 | --- | --- | --- | --- |
-| 냉장고 문 닫기 | 문이 열린 채로 거주자가 조리대로 옮겨 갔을 때 | 폰 안내를 따르는 시연자 | ThinQ가 같은 문을 닫힘으로 읽거나, 나중에 찍은 사진에 닫힌 문이 보일 때 |
-| 컵 씻기 | 거주자가 컵을 두고 떠나 더 쓰지 않을 때 | 트윈 속 가상 식기세척기 | 이 컵이 든 세척 회차가 씻었다고 알릴 때 |
-| 에어컨 맞추기 | 거주자가 거실에서 쉬기 시작할 때 | 실제 에어컨(ThinQ) | ThinQ가 같은 에어컨에서 목표 온도를 다시 읽을 때 |
+| Close the refrigerator door | The door is left open after the resident moves to the counter | A demonstrator following the phone's instruction | ThinQ reads the same door back as closed, or photos taken afterwards show it closed |
+| Wash a cup | The resident has left the cup and is no longer using it | The virtual dishwasher in the twin | The wash cycle holding this cup reports it washed |
+| Adjust the air conditioner | The resident starts resting in the living room | The real air conditioner, through ThinQ | ThinQ reads the target temperature back from the same unit |
 
-일마다 왜 했는지, 왜 아직 기다리는지 화면에서 볼 수 있어요.
+For each task, the screen shows why NOONCHI acted or why it is still waiting.
 
-## 메타인지와 눈치
+## Metacognition and Empathy
 
-- **메타인지:** 아직 모르는 것은 모른다고 둬요. 컵 안이 안 보이면 내용물을 「모름」으로 두고, 그게 판단에 중요하면 위에서 본 사진을 부탁해요. 한 뒤에는 결과가 예상과 같은지 확인해요.
-- **눈치:** 거주자가 아직 쓰는 물건에는 손대지 않고, 마시는 동안에는 급하지 않은 질문을 미뤄요.
+- **Metacognition:** NOONCHI keeps what it doesn't know as unknown. If it can't see inside a cup, the contents stay unknown, and when that matters it asks for a photo from above. After acting, it checks whether the result matches what it expected.
+- **Empathy:** It leaves things alone while the resident is still using them, and it holds non-urgent questions while the resident is drinking.
 
-## 화면
+## Screens
 
-- **폰 화면:** 폰 카메라로 본 실시간 화면
-- **3D 트윈:** 집과 가전 상태, 클로이드의 위치, 에이전트가 지금 확인하는 것
-- **판단 기록:** 요청마다 거친 단계와 결과
+- **Phone view:** the live view from the phone camera
+- **3D twin:** the home and appliance states, where CLOiD is, and what the agent is checking right now
+- **Decision log:** the steps taken and the result for each request
