@@ -4,10 +4,10 @@
 
 | Component | Tech stack | Role |
 | --- | --- | --- |
-| Phone (CLOiD's eye) | Android Chrome, WebXR, WebCodecs (H.264), WebSocket | Knows its own position, sends camera frames and state, and shows the demonstrator what to do |
-| twin-home (home hub) | Node.js 22, TypeScript, matter.js, React, three.js, ThinQ API | Holds the twin state, checks and runs steps, controls ThinQ and the virtual devices, and serves the dashboard |
-| PAM model | Python, Qwen3.5-27B, vLLM | Reads recent photos and the day's memory, and returns one action or "wait" |
-| Observation server | Python 3.11, YOLO26n, SQLite, AES-256-GCM, TLS 1.3 | Collects frames and appliance states, skips idle periods, and keeps the history |
+| CLOiD's Eye (phone) | Android Chrome, WebXR, WebCodecs (H.264), WebSocket | Knows its own position, sends camera frames and state, and shows the demonstrator what to do |
+| CLOiD's Brain (hub) | Node.js 22, TypeScript, matter.js, React, three.js, ThinQ API | Holds the twin state, checks and runs steps, controls ThinQ and the virtual devices, and serves the dashboard |
+| CLOiD's Memory (PAM model) | Python, Qwen3.5-27B, vLLM | Reads recent photos and the day's memory, and returns one action or "wait" |
+| CLOiD's Attention (observation server) | Python 3.11, YOLO26n, SQLite, AES-256-GCM, TLS 1.3 | Collects frames and appliance states, skips idle periods, and keeps the history |
 
 The phone and the laptop connect over a private Tailscale network, and only the registered demo phone can reach the hub.
 
