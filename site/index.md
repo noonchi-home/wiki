@@ -1,26 +1,243 @@
-# Project Overview
+# 능동 관찰과 행동 예측으로 먼저 돕는 CLOiD 에이전트 홈
 
-NOONCHI is a decision prototype for CLOiD, LG's home robot. It notices when a resident could use help, checks what it doesn't know yet, and then decides whether to act or wait. A phone serves as CLOiD's eyes, a laptop as the home hub, and a person stands in for CLOiD's hands.
+LG전자 · 소프트웨어공학 26-2
 
-## What You See in the Demo
+![Node.js](https://img.shields.io/badge/Node.js-22-5FA04E?logo=nodedotjs&logoColor=white)
+![TypeScript](https://img.shields.io/badge/TypeScript-7.0-3178C6?logo=typescript&logoColor=white)
+![React](https://img.shields.io/badge/React-19-61DAFB?logo=react&logoColor=black)
+![three.js](https://img.shields.io/badge/three.js-r187-000000?logo=threedotjs&logoColor=white)
+![Matter](https://img.shields.io/badge/matter.js-0.17-1A1A1A)
+![Redis](https://img.shields.io/badge/Redis-8.10-FF4438?logo=redis&logoColor=white)
+![MCP](https://img.shields.io/badge/MCP_SDK-1.32-D97757)
+![OpenAI](https://img.shields.io/badge/OpenAI_SDK-7-412991?logo=openai&logoColor=white)
 
-One resident cooks, eats, and then rests. NOONCHI takes care of three tasks along the way.
+## 개요
 
-| Task | When NOONCHI steps in | Who carries it out | When it counts as done |
-| --- | --- | --- | --- |
-| Close the refrigerator door | The door is left open after the resident moves to the counter | A demonstrator following the phone's instruction | ThinQ reads the same door back as closed, or photos taken afterwards show it closed |
-| Wash a cup | The resident has left the cup and is no longer using it | The virtual dishwasher in the twin | The wash cycle holding this cup reports it washed |
-| Adjust the air conditioner | The resident starts resting in the living room | The real air conditioner, through ThinQ | ThinQ reads the target temperature back from the same unit |
+눈치(NOONCHI)는 LG의 홈 로봇 클로이드(CLOiD)의 두뇌에 해당하는 의사결정 프로토타입이다. 거주자가 부탁하기 전에 일상에서 도움이 필요한 순간을 알아차리고, 아직 모르는 점을 확인한 뒤 그 사람에게 맞는 행동을 계획하고 실행한다.
 
-For each task, the screen shows why NOONCHI acted or why it is still waiting.
+**핵심어**　능동 관찰, 행동 예측, 사람 상태 유한상태기계(FSM), 디지털 트윈, 선제적으로 돕는 에이전트
 
-## Metacognition and Empathy
+---
 
-- **Metacognition:** NOONCHI keeps what it doesn't know as unknown. If it can't see inside a cup, the contents stay unknown, and when that matters it asks for a photo from above. After acting, it checks whether the result matches what it expected.
-- **Empathy:** It leaves things alone while the resident is still using them, and it holds non-urgent questions while the resident is drinking.
+## I. 배경
 
-## Screens
+### A. 왜 필요한가
 
-- **Phone view:** the live view from the phone camera
-- **3D twin:** the home and appliance states, where CLOiD is, and what the agent is checking right now
-- **Decision log:** the steps taken and the result for each request
+카메라에 컵이 보인다고 바로 치워도 될까? 안에 음료가 남았거나 거주자가 다시 쓰려는 컵일 수 있다. 인덕션이 켜진 채 주방에 사람이 없을 때도 마찬가지다. 요리하다 잠깐 거실에 다녀오는 중일 수 있다.
+
+같은 물건과 가전이 보여도 적절한 행동은 거주자의 의도와 활동, 일정에 따라 달라진다. 정해진 조건마다 같은 행동을 반복하거나 명령이 올 때까지 기다리면 그 차이를 반영하기 어렵다. 반대로 사소한 것까지 모두 물으면 도움 자체가 부담이 된다.
+
+### B. 연구 질문
+
+> **명령을 받지 않아도 일상에서 도움이 필요한 순간을 알아차리고, 부족한 정보를 확인한 뒤, 거주자에게 맞는 행동을 계획하고 실행할 수 있을까?**
+
+- **먼저 알아차리는가?** 직접 받은 명령뿐 아니라 상황을 보고 도움이 필요한지 판단한다.
+- **상황에 맞게 계획하는가?** 처음 보는 상황에서도 가능한 행동을 조합해 계획을 세운다.
+- **모르는 것을 확인하는가?** 판단에 필요한 사실을 확인해 불필요한 질문과 개입을 줄인다.
+- **거주자가 원하는 대로 행동하는가?** 현재 의도와 허락한 범위를 따르고, 이미 확인한 사실이 여전히 유효하면 다시 활용한다.
+
+### C. 목표
+
+1. **관찰** — YOLO26과 시각·언어 모델(VLM)이 실제 폰 카메라로 찍은 사진을 분석한다.
+2. **상태 통합** — 집 상태(World State)에 물건, 사람, 가전, 폰 위치를 모은다.
+3. **행동 예측** — PAM이 사람의 현재 활동과 FSM에서 일어난 상태 전이를 판별한다. 서버는 그 전이에 연결된 일을 읽는다.
+4. **실행** — 폰은 지시를 하나씩 보여 준다. 각 단계는 영상 확인, 폰 위치, 가전 신호, 거주자의 답처럼 그 단계에 맞는 근거가 있을 때 넘어간다.
+5. **학습** — 매일 밤 그날의 기록에서 습관을 배워 다음 날 판단에 쓴다.
+
+---
+
+## II. 데이터
+
+- **실제 영상** — 한양목련 180B의 거실과 주방에서 유리 머그, 흰 머그, 긴 유리잔을 각각 가로 영상으로 촬영했다. 영상마다 다섯 장면(자리 떠나기 → 식탁으로 가기 → 컵 집기 → 싱크대로 가기 → 싱크대에 컵 놓기)으로 잘라 영상 시험에 쓴다.
+- **합성 기록** — 한 사람의 일주일 생활 기록이다. 모든 줄에 합성 자료임을 표시했다. 야간 반성과 습관 채택 검정을 시험하는 데 쓴다.
+- **PAM 일과 실험 영상** — 박석준이 공부와 저녁 일과를 각각 이틀씩 촬영했다. 같은 영상에서 기억이 있을 때와 없을 때 PAM의 행동 선택을 비교한다.
+
+---
+
+## III. 동작 원리
+
+<!-- #region architecture -->
+### A. 시스템 구조
+
+```text
+실제 폰 (카메라 사진 · 위치 · 음성)
+  │  Tailscale (HTTPS · WSS)
+  ▼
+관찰: YOLO26 · VLM
+  ▼
+집 상태(World State): 물건 · 사람 · 가전 · 폰 위치 → 관찰 텍스트
+  ▼
+행동 예측: PAM + 사람 상태 FSM
+  ▼
+목표 · 관리자: 미리 만든 계획, 일의 우선순위
+  ▼
+실행 · 확인: 실제 폰에 단계별 지시, 가전 제어(Matter · ThinQ)
+  │
+  ├─▶ 기록 DB ─▶ 야간 반성 · 습관 채택 검정 ─▶ 다음 날 FSM
+  └─▶ 대시보드 (3D 트윈)
+```
+
+| 구성 요소 | 하는 일 |
+|---|---|
+| 실제 폰(클로이드의 눈) | 카메라 사진과 위치를 보내고, 서버가 보낸 단계별 지시를 사람에게 화면과 음성으로 전달한다. |
+| 눈치 서버(클로이드의 두뇌) | YOLO와 VLM으로 관찰하고 결과를 집 상태에 모은다. PAM으로 판단한 뒤 계획을 실행하고 결과를 확인한다. |
+| 대시보드 | 클로이드가 무엇을 보고 어떻게 판단하는지 3D 트윈 위에 보여 준다. |
+| 사람(클로이드의 손발) | 폰의 지시에 따라 움직인다. |
+
+서버의 판단·목표·관리·실행 노드는 `REDIS_URL`이 설정되어 있으면 Redis를 통해 메시지를 주고받고, 그 외에는 메모리 안에서 주고받는다. `src/`의 주요 도메인은 다음과 같다.
+
+| 도메인 | 핵심 기능 |
+|---|---|
+| `observe` | 사진에서 물건과 사람의 활동을 읽는다. |
+| `world` | 관찰과 신호를 모아 현재 집 상태를 만든다. |
+| `brain` | 사람의 상태 변화를 따라가며 습관을 학습한다. |
+| `goal` | 앞으로 할 일을 미리 준비한다. |
+| `manage` | 무엇을 먼저 할지 정한다. |
+| `act` | 폰으로 한 단계씩 안내하고 각 단계가 끝났는지 확인한다. |
+| `machines` | 로봇·목표·관리자·안전 상태를 표시한다. `world`가 낙상을 감지하고, `act`는 위험 가전의 꺼짐이 확인될 때까지 추적한다. |
+| `agent` | 말로 받은 부탁을 계획으로 바꾼다. |
+| `phone` | 폰을 연결하고 위치를 맞춘다. |
+| `devices` | 가전을 제어한다. |
+| `layout` | 집의 배치와 이동 경로를 다룬다. |
+| `bus` · `record` · `server` | 각각 노드 간 통신, 기록, 서버 운영을 맡는다. |
+
+### B. 관찰 — YOLO26과 VLM
+
+기본 설정에서 폰은 0.1초마다 사진 한 장과 WebXR로 얻은 위치·방향을 보낸다. YOLO26s-seg는 미니맵에 표시할 물체 윤곽을 만들고, YOLO26n-pose는 사람이 보이면 자세를 추정한다. VLM은 보통 2초마다 한 장을 골라 최대 다섯 장을 함께 읽고 물건, 손에 든 것, 사람이 하는 일을 판별한다. 물건을 찾거나 컵 안을 확인할 때는 간격을 1초로 줄이고 대상 부분을 잘라 더 가까이 볼 수 있다.
+
+### C. 집 상태(World State)
+
+집 상태는 관찰 결과에 집 배치, 가전 신호, 폰 위치를 합친다. 컵처럼 움직일 수 있는 물건의 존재는 VLM이 판별한다. 전체 장면에서 서로 다른 두 장으로 새 물건을 확인할 수 있다. 그 뒤 물건이 있던 위치가 보이는데도 세 장에서 물건이 보이지 않으면 사라진 것으로 처리할 수 있다. 서버는 사진 속 물건 밑부분을 지나는 카메라 광선이 트윈의 어느 면에 닿는지로 위치를 추정한다. PAM에는 확인된 사실, 짐작, 모르는 사실을 구분해 시각과 함께 글로 보낸다.
+
+### D. 행동 예측 — 사람 상태 FSM과 PAM
+
+기억은 사람 상태 FSM으로 표현한다. 상태 하나는 마시기, TV 보기, 요리하기, 자리에 없음처럼 사람이 무엇을 하고 있는지 나타낸다. 한 상태에서 다른 상태로 넘어가는 전이에는 로봇 행동을 연결할 수 있다. 주기 판단 모드에서 기본 간격은 nano 모델이 1초, 다른 모델이 5초다. PAM이 관찰 텍스트와 FSM을 읽고 현재 상태와 관찰한 전이를 알려 주면, 서버는 그 전이에 연결된 행동을 찾아 실행 전에 관련 물건을 확인한다.
+
+### E. 계획 미리 만들기와 단계별 실행
+
+클로이드가 컵을 치우는 습관을 배웠다면, 사람이 아직 마시는 동안 목표 노드가 미리 계획을 요청할 수 있다. 사람이 자리를 떠나면 PAM이 다시 판단한다. 컵을 치우기로 했다면 서버가 현재 컵과 그 위치를 기준으로 미리 만든 계획을 다시 검사한 뒤 첫 지시를 보낸다. 관리자의 우선순위는 안전, 말로 받은 부탁, 목표, 대기 중에 할 일 순이다.
+
+폰은 사람에게 식탁으로 가서 컵 안을 비춰 달라고 안내한다. 위에서 선명하게 찍은 두 장으로 빈 컵임이 확인되면 컵 집기, 싱크대로 가기, 싱크대에 컵 놓기를 한 번에 하나씩 안내한다. 음료가 남았으면 버릴지 묻고, 내용물을 끝내 확인하지 못하면 계획을 멈춘다. 낙상이 의심되면 즉시 비상 상태가 된다. 계획이 위험 가전을 켰다면 꺼졌다는 근거가 생길 때까지 추적한다.
+
+### F. 습관 학습 — 야간 반성과 채택 검정
+
+하루에 한 번, 그날의 기록을 활동 단위로 묶으면 PAM이 반성을 통해 후보 FSM을 제안한다. 후보는 코드로 형식을, LLM으로 의미를 검사한 뒤 채택 검정을 거친다. 후보 조건이 발생한 뒤 300초 이내에 사람이 해당 행동을 한 비율이 75% 이상이고, 단측 이항 검정에서 p < 0.001이면 다음 날 FSM에 채택한다. 컵 치우기 습관을 배우기 전에는 치울지 묻는다. 학습한 뒤에는 빈 컵임이 확인되면 묻지 않고 치운다. 위험 가전 명령에는 여전히 승인이 필요하다.
+
+### G. 사용자 화면
+
+- **실제 폰** — 위에는 마스코트와 현재 지시가, 아래에는 비전 상태와 ‘완료’ 단추가 보인다. 지시를 소리 내어 읽어 주며 질문에는 말로 답할 수 있다.
+- **대시보드** — 화면을 채운 3D 트윈 위에 비전 미니맵, 메시지 상자, 사람과 로봇의 시간 줄이 보인다. 촬영 시각을 알 수 있으면 실시간 카메라 화면에서 감지 마스크를 같은 시각의 영상에 맞춘다. 계획은 트윈 위에 번호가 붙은 경로로, 목표는 대상의 빨간 고리와 미리 그린 옅은 경로로 보인다. 입력창은 없다.
+<!-- #endregion architecture -->
+
+---
+
+## IV. 결과
+
+<!-- #region results -->
+**영상 시험.** 실제로 촬영한 영상을 영상 모드에서 끝까지 재생하고 실제 폰과 같은 방식으로 서버에 보낸다. 지시가 순서대로 나왔는지와 계획이 끝났는지를 판정한다.
+
+| 영상 | 판정 | 사람이 떠난 뒤 첫 지시까지 |
+|---|---|---|
+| 유리 머그 | 통과 | 3.5초 |
+| 긴 유리잔 | 통과 | 3.2초 |
+| 흰 머그 | 통과 | 1.9초 |
+
+**PAM 일과 실험.** 같은 영상에서 올바른 행동을 고른 정도를 F1 점수로 나타냈다. 1이면 모두 맞은 것이다.
+
+| 일과 | 기억 있음(FSM) | 기억 없음 |
+|---|---|---|
+| 공부 2일째 | 0.41 | 0.04 |
+| 저녁 1일째(일과 변경) | 0.27 | 0.00 |
+| 저녁 2일째 | 0.25 | 0.08 |
+
+**평가 지표.** 불필요한 개입(하지 말아야 할 행동이나 질문), 놓친 상황, 과신(확인했다고 했지만 틀린 사실), 모름을 올바르게 판단한 경우(보이지 않을 때 모른다고 답함), 관찰 지연(촬영부터 판단까지), 판단 지연을 본다.
+<!-- #endregion results -->
+
+---
+
+## V. 기존 연구와 비교
+
+<!-- #region comparison -->
+**PAM.** Lee 등의 절차적 도움 기억(Procedural Assistance Memory, PAM)은 사람의 일과를 FSM 기억으로 저장하고 하루가 끝날 때 반성으로 갱신한다. 눈치는 논문의 프롬프트를 그대로 옮겼다. 입력으로 집 상태의 관찰 텍스트를 사용하고, 상태를 사람이 하는 일로 정의하며, 채택 검정을 통과한 습관만 쓴다.
+
+**스마트홈 루틴.** 기존 스마트홈 루틴은 사용자가 정한 조건이 맞으면 정해 둔 행동을 반복한다. 눈치는 현재 활동과 학습한 상태 전이를 바탕으로 다음에 할 수 있는 일을 미리 준비한다. 사람이 물건을 쓰는 동안은 기다리고, 실행 직전에도 상황에 맞는 일인지 확인한다.
+
+**사용한 도구와 라이브러리.** onnxruntime, vLLM, SQLite, Docker, Tailscale, LG ThinQ.
+<!-- #endregion comparison -->
+
+---
+
+## VI. 한계와 다음 단계
+
+<!-- #region limits -->
+**한계**
+
+- 실제 로봇을 움직이지 않는다. 폰이 눈을, 사람이 손발을 대신한다. 판단에는 이동 시간을 반영하지 않는다.
+- 한 집에서 한 사람이 생활하는 경우를 다룬다. 여러 사람의 습관이 충돌하는 경우는 범위 밖이다.
+- 모델 자체를 학습시키지 않고 기억만 갱신한다.
+
+**향후 과제**
+
+- 트윈 시뮬레이터로 행동했을 때와 기다렸을 때의 결과를 예측하고 비교한다.
+- 인덕션 안전이나 외출 후 귀가 같은 상황으로 확장한다.
+- 검토를 마친 경험을 바탕으로 모델을 별도로 학습시켜 고정 모델과 비교한다.
+<!-- #endregion limits -->
+
+---
+
+## 팀
+
+| 이름 | 담당 역할 |
+|---|---|
+| Jeong-O Heo | **스크럼 마스터 · 시스템 통합** — 눈치 서버를 개발하고 폰의 AR 카메라, 3D 집 모델, 실시간 대시보드를 연결했다. |
+| Seokjun Park | **의사결정 모델 · 습관 학습** — PAM의 판단과 반성 로직을 개발하고 습관 채택을 위한 통계 검정을 설계했으며, 일상 루틴 실험을 수행했다. |
+| Junhyeong Kim | **모델 연구 · 평가** — PAM 구현에 참여하고 집 안에서 촬영한 시나리오 영상을 시각별 모델 시험 입력으로 만들었다. |
+| Jihun Shin | **보안 설계 · 개인정보 보호** — 카메라 프레임 처리 정책을 설계하고 추론 중 이미지가 저장되는지 감지하는 도구를 개발했다. |
+
+---
+
+## 저장소 구조
+
+```text
+.
+├── README.md
+├── src/          # 서버 (Node.js 22, III-A 표의 도메인)
+├── ui/           # 대시보드 · 설정 · 폰 화면 (React)
+├── twin/         # 집 자산과 3D 트윈
+├── models/       # YOLO26 ONNX 모델
+├── scripts/      # 검사, 영상 시험, 시연 준비
+├── tests/        # 서버 시험 (Vitest)
+├── deploy/       # Dockerfile, compose
+└── docs/         # 계약과 참조 문서
+```
+
+---
+
+## 출처
+
+- D. Lee, M. Park 외, *An Agentic Framework for Proactive Robots with Procedural Assistance Memory*, arXiv:2610.21211.
+- Ultralytics, *YOLO26*.
+- Qwen Team, *Qwen3-VL*, *Qwen3.5*.
+- W3C, *WebXR Device API*, *WebXR Raw Camera Access*.
+- Connectivity Standards Alliance, *Matter 1.4*.
+
+---
+
+## 라이선스
+
+코드는 AGPL-3.0을 따른다([LICENSE](https://github.com/noonchi-home/noonchi/blob/main/LICENSE)). `models/`의 YOLO26 모델에도 AGPL-3.0(Ultralytics)이 적용된다. `src/brain/pam/prompts/paper/`의 PAM 프롬프트 일곱 개는 Lee 등의 논문(arXiv:2610.21211)에서 CC BY 4.0에 따라 인용했다. 다른 고지 사항은 [THIRD_PARTY.md](https://github.com/noonchi-home/noonchi/blob/main/THIRD_PARTY.md)에 있다.
+
+---
+
+## 시작하기
+
+<!-- #region start -->
+```bash
+npm install
+npm --prefix ui install
+cp .env.example .env   # OPENAI_API_KEY
+npm start              # http://127.0.0.1:8200
+```
+
+GPU 서버 배포는 `docker compose --env-file .env -f deploy/compose.yaml --profile gpu up -d --build`로 실행한다. [배포 안내](https://github.com/noonchi-home/noonchi/blob/main/docs/deploy.md)
+<!-- #endregion start -->

@@ -1,123 +1,100 @@
-# Technical Case Studies
+# 시연과 실험
 
-## 01. PAM Four-Day Routine Experiment
+## 눈치 시연 결과
 
-PAM (Procedural Assistance Memory) is a memory of a user's activity phases and the help to give in each phase. A VLM reads recent photos together with this memory and either picks one kind of help or waits. At the end of each day, it revises the memory from that day's photos (self-reflection). We used four days of routine videos we filmed ourselves to compare whether the VLM picks the right help at the right time with and without memory.
+<!--@include: ../index.md#results-->
 
-### Routines and Videos
+## PAM 일과 실험 — 나흘간의 기록
 
-We filmed two routines. Each day's video joins scenes at the desk, at the room light switch, and in bed, all from one camera. Two days of routine A (A1, A2) are followed by two days of routine B (B1, B2).
+PAM(Procedural Assistance Memory)은 사람이 일과 중 어느 단계에 있고 그 단계에서 어떤 도움을 받는지를 기억한다. 이 실험에서는 시각·언어 모델이 최근 사진과 기억을 보고 행동 하나를 고르거나 기다렸다. 매일 마지막에는 그날의 사진을 돌아보며 기억을 고쳤다. 직접 촬영한 나흘치 영상으로 기억이 있을 때와 없을 때 알맞은 시점에 도움을 고르는지 비교했다.
 
-| Routine | The day |
-| --- | --- |
-| A (study) | Looks at the phone, puts it down, and brings a book to read. Brings a cup and drinks while reading, then closes the book and carries the book and cup out. Brings a laptop and a canned drink to work, then closes the laptop and clears both away. Turns off the room light on the way out, and turns off the bedside lamp after using the phone in bed. |
-| B (evening) | Looks at the phone, puts it down, pulls the vitamin bottle over, and brings a cup to take the vitamins. Eats from a bowl while drinking from the cup, then clears the bowl and cup. Turns off the room light, and turns off the bedside lamp in bed. |
+### 일과와 영상
 
-### Method
+카메라 한 대로 책상, 조명 스위치, 침대 앞에서 찍은 장면을 이어 하루 영상을 만들었다. 먼저 공부 일과 A를 이틀(A1, A2), 이어 저녁 일과 B를 이틀(B1, B2) 촬영했다.
 
-| Item | Details |
-| --- | --- |
-| Choosing actions | Every second, the model sees up to 9 recent photos (1 second apart) and the day's memory, and picks one action or waits. Extra reasoning is off and the temperature is 0.3. |
-| Self-reflection | At the end of each day, it builds or revises the memory from 200 photos, with extra reasoning on. The first day (A1) starts with no memory, and reflection builds the first one. |
-| Conditions | FSM memory (phases with transitions between them), list memory (condition and action pairs only, no phases), no memory |
-| Ten actions | Bring the cup, can, or book next to the person; put the cup or bowl in the dishwasher; put the can or book in its storage spot; turn off the room light; turn off the bedside lamp; put the bedside lamp away (a wrong option with no matching scene) |
-| Model and server | Qwen3.5-27B (BF16), vLLM 0.33.0, one 80 GB H100 |
+| 일과 | 하루의 행동 |
+|---|---|
+| A · 공부 | 폰을 보다가 내려놓고 책을 가져와 읽는다. 컵을 가져와 읽으며 마신 뒤 책을 덮고 컵과 함께 들고 나간다. 노트북과 캔 음료를 가져와 일하고 둘 다 치운다. 나가며 방 불을 끄고, 침대에서 폰을 쓴 뒤 머리맡 조명을 끈다. |
+| B · 저녁 | 폰을 내려놓고 비타민 통을 당겨 온 뒤 컵을 가져와 비타민을 먹는다. 컵으로 마시며 그릇에 담긴 음식을 먹고 둘 다 치운다. 방 불을 끄고 침대에서 머리맡 조명을 끈다. |
 
-**Answer key.** Every second has a correct answer, used only for scoring and never shown to the model.
+### 방법과 채점
 
-- If something the person needs isn't there yet, bring it next to them. This runs from the first sign (putting the phone down, opening a book to read, setting a bowl down to eat) until the person brings it themselves.
-- If a used item is still beside the person, clear it away. This runs from when they finish with it until they carry it out.
-- After the person clears everything and leaves for the last time, turn off the room light. After they put the phone down in bed, turn off the bedside lamp.
-- Otherwise, do nothing.
-- Deliveries are counted separately: on time if given before the person gets up to fetch the item, late if given after they get up but before they return, and missed if never given.
+| 항목 | 실험 조건 |
+|---|---|
+| 행동 선택 | 매초, 1초 간격으로 촬영한 최근 사진 최대 9장과 그날의 기억을 보고 행동 하나를 고르거나 기다렸다. 추가 추론은 껐고 온도는 0.3이었다. |
+| 자기반성 | 하루가 끝나면 사진 200장으로 기억을 만들거나 고쳤다. 추가 추론을 켰다. 첫날(A1)은 기억 없이 시작해 밤에 첫 기억을 만들었다. |
+| 비교 조건 | 상태와 전이가 있는 FSM 기억, 조건과 행동만 있는 목록 기억, 기억 없음. |
+| 행동 10개 | 컵·캔·책 가져오기, 컵·그릇을 식기세척기에 넣기, 캔·책을 보관 자리에 놓기, 방 불 끄기, 머리맡 조명 끄기, 머리맡 조명 치우기. 마지막 행동에 해당하는 장면은 없었다. |
+| 모델과 서버 | Qwen3.5-27B(BF16), vLLM 0.33.0, 메모리 80GB인 H100 한 대. |
 
-### Results
+매초의 정답은 채점에만 썼다. 필요한 물건이 없으면 사람이 폰을 내려놓거나 책을 펴거나 그릇을 놓은 때부터 직접 가져올 때까지가 전달할 기회였다. 다 쓴 물건은 사용을 마친 때부터 사람이 직접 치울 때까지 정리할 수 있었다. 마지막으로 물건을 치우고 나가면 방 불을, 침대에서 폰을 내려놓으면 머리맡 조명을 끄는 것이 정답이었다. 나머지 때는 기다리는 것이 정답이었다.
 
-| Day | With memory (FSM) | Without memory |
-| --- | --- | --- |
-| Study, day 2 | 0.41 | 0.04 |
-| Evening, day 1 (routine changed) | 0.27 | 0.00 |
-| Evening, day 2 | 0.25 | 0.08 |
+물건 전달은 사람이 가지러 일어나기 전이면 ‘제때’, 일어난 뒤 돌아오기 전이면 ‘늦음’, 끝까지 전달하지 않으면 ‘놓침’으로 따로 셌다.
 
-The numbers are F1 scores for picking the right action, where 1 is perfect. Each condition ran once.
+### 결과 해석
 
-- **With memory, it did much better.** FSM memory scored higher than no memory every day, and its first correct action came sooner (study day 2: 3.9 s vs 13.0 s; evening day 2: 5.5 s vs 12.5 s).
-- **Memory still helped on the day the routine changed.** On evening day 1, FSM memory chose to turn off the room light 2 seconds into that window and the bedside lamp right away. Without memory, it chose neither.
-- **FSM memory and list memory were close.** Their F1 scores differed by 0.03–0.07. Running the first day twice on identical input also gave F1 scores of 0.04 and 0.15, 0.11 apart.
-- **On time:** On study day 2, FSM memory brought the cup at 32 seconds, inside its 28–70 second window, and chose putting the can away, turning off the light, and turning off the lamp each within 1 second. On evening day 2, it brought the cup during the meal 1 second after the window opened.
-- **Missed:** Every condition missed the cup for the vitamins in routine B.
-- **Wrong choices:** On evening day 1, FSM memory followed routine A and chose "bring the book" twice. Without memory, it chose "put the can away," which never happens on B days, 8 times on each B day, often taking the black vitamin bottle on the desk for a can.
+각 조건은 한 번씩 실행했다. 위 표의 F1은 같은 영상에서 올바른 행동을 선택한 점수다.
 
-### How the Memory Changed (FSM)
+- **첫 정답까지 걸린 시간** — FSM 기억이 있을 때 공부 2일째는 3.9초, 저녁 2일째는 5.5초였다. 기억이 없을 때는 각각 13.0초, 12.5초였다.
+- **일과를 바꾼 날** — 저녁 1일째, FSM 기억으로는 방 불을 끌 수 있는 구간이 열린 지 2초 만에 방 불 끄기를 골랐고 머리맡 조명은 바로 골랐다. 기억이 없을 때는 둘 다 고르지 못했다.
+- **기억 형식** — FSM과 목록 기억의 F1 차이는 0.03~0.07이었다. 같은 첫날 입력을 두 번 돌렸을 때도 0.04와 0.15로 0.11 차이가 났다.
+- **제때 고른 예** — 공부 2일째 컵을 가져올 수 있는 28~70초 구간에서 32초에 가져오기를 골랐다. 캔 치우기와 두 조명 끄기는 각각 해당 구간이 열린 뒤 1초 안에 골랐다. 저녁 2일째에는 식사 중 컵을 가져올 수 있게 된 지 1초 만에 골랐다.
+- **놓친 예** — 모든 조건이 저녁 일과에서 비타민을 먹을 때 쓸 컵을 놓쳤다.
+- **잘못 고른 예** — FSM은 저녁 1일째에도 공부 일과처럼 ‘책 가져오기’를 두 번 골랐다. 기억이 없을 때는 검은 비타민 통을 캔으로 보는 경우가 많았다. 저녁 일과에 없는 ‘캔 치우기’를 이틀 모두 여덟 번씩 골랐다.
 
-| Reflection | Phases / rules | What changed |
-| --- | --- | --- |
-| After A1 (built, 438 s) | 6 / 8 | Book when seated, cup when reading starts, cup to the dishwasher when the book closes, can when typing, can to the trash when the laptop closes, light off when heading to the switch, lamp off when the phone goes down. It also made "bring the laptop," which isn't on the action list. |
-| After A2 (revised, 313 s) | 6 / 8 | The rules stayed and only the conditions widened, for example "cup when looking at the book or leaving the desk." |
-| After B1 (revised, 200 s) | 5 / 6 | Every routine A rule (book, laptop, can) was deleted. Cup and bowl when seated, and bowl and cup to the dishwasher after eating; turning off the light and the lamp stayed. No vitamin rule appeared. |
+### 밤마다 달라진 기억
 
-List memory kept the routine A rules after B1 and added "bowl to the dishwasher when the person leaves it and gets up," for 9 rules. In the paper, the original routine's phases and rules stayed after the first day of a changed routine, and only the changed rules were revised.
+| 반성 시점 | 상태 / 규칙 | 달라진 내용 |
+|---|---|---|
+| A1 뒤(생성, 438초) | 6 / 8 | 앉으면 책, 읽기 시작하면 컵, 책을 덮으면 컵을 식기세척기에, 타이핑하면 캔, 노트북을 닫으면 캔을 쓰레기통에 넣는 규칙을 만들었다. 스위치로 가거나 폰을 내려놓을 때의 조명 규칙과 행동 목록에 없는 ‘노트북 가져오기’도 만들었다. |
+| A2 뒤(갱신, 313초) | 6 / 8 | 규칙은 유지하고 ‘책을 보거나 책상을 떠나면 컵’처럼 조건만 넓혔다. |
+| B1 뒤(갱신, 200초) | 5 / 6 | 책·노트북·캔 관련 공부 규칙은 모두 지웠다. 앉으면 컵과 그릇을 가져오고 식사 뒤 식기세척기에 넣는 규칙, 방 불과 머리맡 조명을 끄는 규칙은 남았다. 비타민 규칙은 생기지 않았다. |
 
-### Run Details
+목록 기억은 B1 뒤에도 공부 규칙을 유지하고 ‘그릇을 두고 일어나면 식기세척기에 넣기’를 더해 규칙이 아홉 개가 됐다. 논문에서는 일과를 바꾼 첫날 뒤에도 원래 일과의 상태와 규칙이 남고 달라진 규칙만 갱신됐다.
 
-| Item | Value |
-| --- | --- |
-| Choosing one action | 4.4–5.5 s, about 2,700–3,700 input tokens |
-| One reflection | 200–438 s, 45,717–53,096 input tokens, 8,186–15,031 output tokens |
-| GPU cost | About $3.5 for FSM and no memory, about $4.3 for list memory (H100 at $4.01 per hour) |
+### 실행 비용과 논문 실험의 차이
 
-### Differences from the Paper
+| 항목 | 이 실험의 측정값 |
+|---|---|
+| 행동 선택 한 번 | 4.4~5.5초, 입력 약 2,700~3,700토큰 |
+| 반성 한 번 | 200~438초, 입력 45,717~53,096토큰, 출력 8,186~15,031토큰 |
+| GPU 비용 | FSM·기억 없음 실험은 약 3.5달러, 목록 기억 실험은 약 4.3달러(H100 시간당 4.01달러). |
 
-| Item | Paper | This experiment |
-| --- | --- | --- |
-| Video | Filmed at a desk | One camera, with desk, switch, and bed scenes joined |
-| Photos per choice | 5, 2 seconds apart | 9, 1 second apart |
-| Days per routine | 5 | 2 |
-| Windows with two correct answers | One correct answer per photo | Either answer counts |
-| Repetition | Ranges over several runs | One run per condition |
+| 항목 | 논문 | 이 실험 |
+|---|---|---|
+| 촬영 | 책상에서 촬영 | 카메라 한 대로 책상·스위치·침대 장면을 이어 붙임 |
+| 판단당 사진 | 2초 간격 5장 | 1초 간격 9장 |
+| 일과당 기간 | 5일 | 2일 |
+| 맞는 행동이 둘인 구간 | 사진당 한 가지 정답 | 둘 중 어느 쪽도 정답 |
+| 반복 횟수 | 여러 번 실행한 범위 | 조건당 한 번 |
 
-## 02. Photo Security Structure
+## 사진 보안 실험
 
-Photos of the home reach the decision model only through the observation server (backend) and a gate (receiver). The gate sits in front of the model server, watches for photo leaks while the model is deciding, and stops sending if it finds one.
+이 실험에서는 집 안 사진을 관찰 서버와 수신기를 거쳐 모델 서버로 보냈다. 수신기는 추론 중 사진 유출 징후를 감시했다. 현재 눈치 서버에서 PAM으로 보내는 입력은 [집 상태가 만든 관찰 텍스트](./system.md)다.
 
-### Components
+| 구성 요소 | 실험에서 맡은 일 |
+|---|---|
+| 관찰 서버 | 폰 프레임과 가전 상태로 입력을 만들고, 실제로 보낸 사진을 암호화해 보관했다. |
+| 수신기 | 모델 서버에서 사진을 받아 모델을 호출하고, 그동안 네트워크 연결과 파일 생성을 감시했다. |
 
-| Component | Role |
-| --- | --- |
-| Observation server (backend) | Builds the information sent for decisions from phone frames and appliance states, and keeps the sent photos encrypted |
-| Gate (receiver) | Installed on the model server. Receives photos from the backend, calls the decision model, and watches the model server's network and files in the meantime |
+### 감시와 전송 중단
 
-### Leak Monitoring and Stopping
+연결할 때마다 관찰 서버는 모델 호출 방법과 연결을 허용한 주소를 수신기에 보냈다. 추론 중에 허용 목록 밖의 주소로 연결하거나 바탕화면·다운로드·문서·AI 저장소에 사진이 생기면 수신기가 알렸다. 관찰 서버는 경보를 기록하고 전송을 멈췄다. 사람이 경보를 확인하고 재개해야 다시 보냈다. 수신기가 단순 종료된 경우에는 ‘AI 연결 안 됨’을 표시하고, 수신기가 돌아오면 자동으로 재개했다.
 
-1. Every time it connects, the backend sends the gate a policy: how to call the decision model and which addresses it may reach while deciding.
-2. While a decision runs, the gate watches the model server.
-   - **Network:** outgoing connections to addresses not on the allow list
-   - **Files:** photos appearing in the Desktop, Downloads, Documents, or AI repository folders
-3. When it catches a leak, the gate alerts the backend, and the backend stops sending with the stop marked as caused by an alert.
-4. Sending resumes only after a person checks the alert and resumes it.
+### 연결과 저장
 
-If the gate simply shuts down, that doesn't count as a leak. The backend shows "AI not connected" and resumes on its own when the gate comes back.
+두 서버는 처음에 여섯 자리 코드로 짝을 맺었다. 이후 양쪽 인증서를 고정하고 TLS 1.3 상호 인증을 거친 연결만 받았다. 인증서가 없으면 TLS 연결 단계에서 끊었다. 코드가 틀리면 짝 맺기 실패, 바뀐 인증서로 다시 짝을 맺으려 하면 인증서 불일치 경보가 떴다.
 
-### Connection
+보낸 사진만 AES-256-GCM으로 암호화해 저장했다. 사진 키를 보호하는 마스터 키는 운영체제 키 저장소에 뒀다. 하루가 끝날 때 보낸 사진을 모델 서버로 전달해 반성한 뒤 양쪽에서 지웠다. 날짜가 바뀔 때도 지웠다.
 
-- The two sides pair once with a six-digit code. After that, they talk only over TLS 1.3 with mutual authentication and certificates pinned on both sides.
-- A connection without a certificate is cut off during the TLS handshake.
-- A wrong code raises a "pairing failed" alert, and re-pairing with a changed certificate raises a "certificate mismatch" alert.
+### 보안 시험
 
-### Storage and Deletion
-
-- Only photos that were sent are kept. Each is stored encrypted with AES-256-GCM, so opening the file shows ciphertext, not an image.
-- The master key that wraps the photo keys lives in the OS keychain.
-- During the end-of-day reflection, all sent photos go to the model server and are then deleted on both sides. They are also deleted when the date changes.
-
-### Security Tests
-
-| Test | Method | Expected result |
-| --- | --- | --- |
-| Encrypted storage | Inspect the start of a stored file | A ciphertext marker and random bytes, not an image |
-| Connection without a certificate | Connect to the gate without a certificate | Cut off during the TLS handshake |
-| Wrong pairing code | Pair with 000000 | "Pairing failed" alert |
-| Network leak | A test runner that opens an outside connection while deciding | Gate alert, sending stopped, resumed after a check |
-| File leak | A test runner that briefly writes a photo to Downloads while deciding | Caught the same way |
-| Gate shutdown | Stop and restart the gate | "AI not connected," then automatic resume with no alert |
-| Reflection | Run reflection | All sent photos sent, then deleted on both sides |
+| 시험 | 방법 | 기대 결과 |
+|---|---|---|
+| 암호화 저장 | 보관 파일의 앞부분 확인 | 이미지 대신 암호문 표시와 암호화된 바이트 |
+| 인증서 없는 연결 | 인증서 없이 수신기에 연결 | TLS 연결 단계에서 종료 |
+| 잘못된 코드 | 000000으로 짝 맺기 | 짝 맺기 실패 경보 |
+| 네트워크 유출 감시 | 판단 중 허용하지 않은 주소에 시험 연결 | 경보와 전송 중단, 사람이 확인한 뒤 재개 |
+| 파일 유출 감시 | 판단 중 다운로드 폴더에 사진을 잠시 쓰기 | 같은 절차로 감지하고 중단 |
+| 수신기 종료 | 수신기를 멈췄다가 재시작 | 유출 경보 없이 연결 상태 표시 후 자동 재개 |
+| 반성 | 하루 반성 실행 | 보낸 사진을 전달한 뒤 양쪽에서 삭제 |

@@ -12,33 +12,42 @@ const milestones = [
 ]
 
 export default defineConfig({
-  lang: 'en',
+  lang: 'ko-KR',
   title: 'NOONCHI',
-  description: 'A smart-home agent that assists residents during everyday activities.',
+  description: '거주자의 일상을 관찰하고 필요한 순간에 먼저 돕는 눈치 프로젝트.',
+  locales: {
+    submissions: {
+      lang: 'en',
+      label: 'Docs',
+      description: 'A smart-home agent that assists residents during everyday activities.',
+      themeConfig: { outline: { level: [2, 3], label: 'On this page' } },
+    },
+  },
   base,
   head: [['link', { rel: 'icon', type: 'image/png', href: base + 'brand/mascot.png' }]],
   themeConfig: {
+    i18nRouting: false,
     logo: '/brand/header-icon.png',
     nav: [
-      { text: 'Overview', link: '/' },
-      { text: 'Architecture', link: '/guide/system' },
-      { text: 'Case Studies', link: '/guide/scenarios' },
+      { text: '프로젝트 개요', link: '/' },
+      { text: '시스템 구조', link: '/guide/system' },
+      { text: '시연과 실험', link: '/guide/scenarios' },
       { text: 'Docs', link: '/submissions/a', activeMatch: '^/submissions/' },
     ],
     sidebar: [
       {
-        text: 'Project',
+        text: '프로젝트',
         items: [
-          { text: 'Project Overview', link: '/' },
-          { text: 'System Architecture', link: '/guide/system' },
-          { text: 'Technical Case Studies', link: '/guide/scenarios' },
-          { text: 'Run Guide', link: '/guide/run' },
-          { text: 'Development Notes', link: '/guide/development-notes' },
+          { text: '프로젝트 개요', link: '/' },
+          { text: '시스템 구조', link: '/guide/system' },
+          { text: '시연과 실험', link: '/guide/scenarios' },
+          { text: '실행 안내', link: '/guide/run' },
+          { text: '개발 노트', link: '/guide/development-notes' },
         ],
       },
       { text: 'Docs', items: milestones },
     ],
     search: { provider: 'local' },
-    outline: { level: [2, 3], label: 'On this page' },
+    outline: { level: [2, 3], label: '이 페이지에서' },
   },
 })
