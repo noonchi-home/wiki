@@ -7,19 +7,20 @@ on:
 
 permissions:
   contents: read
-  pages: write
-  id-token: write
 
 concurrency:
   group: pages
   cancel-in-progress: false
 
 jobs:
-  deploy:
+  build:
     runs-on: ubuntu-latest
-    environment:
-      name: github-pages
-      url: ${{ steps.publish.outputs.page_url }}
+    permissions:
+      contents: read
+      pages: read
+    outputs:
+      artifact_name: ${{ steps.artifact-name.outputs.name }}
+      artifact_id: ${{ steps.upload.outputs.artifact_id }}
     steps:
       - uses: actions/checkout@v5
       - uses: actions/setup-node@v6
@@ -29,8 +30,48 @@ jobs:
       - uses: actions/configure-pages@v5
       - run: npm ci
       - run: npm run build
-      - uses: actions/upload-pages-artifact@v3
+      - id: artifact-name
+        run: echo "name=github-pages-${GITHUB_RUN_ATTEMPT}" >> "$GITHUB_OUTPUT"
+      - id: upload
+        uses: actions/upload-pages-artifact@v4
         with:
+          name: ${{ steps.artifact-name.outputs.name }}
           path: site/.vitepress/dist
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      actions: read
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.publish.outputs.page_url }}
+    steps:
+      - name: Wait for this build's Pages artifact
+        shell: bash
+        timeout-minutes: 1
+        env:
+          GH_TOKEN: ${{ github.token }}
+          ARTIFACT_NAME: ${{ needs.build.outputs.artifact_name }}
+          ARTIFACT_ID: ${{ needs.build.outputs.artifact_id }}
+        run: |
+          if [[ -z "$ARTIFACT_NAME" || ! "$ARTIFACT_ID" =~ ^[0-9]+$ ]]; then
+            echo "::error::Build did not return a Pages artifact name and ID"
+            exit 1
+          fi
+          for attempt in {1..10}; do
+            if ids=$(gh api --method GET "repos/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID/artifacts" \
+                -f "name=$ARTIFACT_NAME" --jq '.artifacts[] | select(.expired == false) | .id') &&
+                [[ "$ids" == "$ARTIFACT_ID" ]]; then
+              exit 0
+            fi
+            if (( attempt < 10 )); then sleep 3; fi
+          done
+          echo "::error::Pages artifact $ARTIFACT_NAME ($ARTIFACT_ID) is not visible in run $GITHUB_RUN_ID"
+          exit 1
       - id: publish
-        uses: actions/deploy-pages@v4
+        uses: actions/deploy-pages@v5
+        with:
+          artifact_name: ${{ needs.build.outputs.artifact_name }}
