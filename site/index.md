@@ -2,15 +2,6 @@
 
 **NOONCHI** · LG전자 · 소프트웨어공학 26-2
 
-![Node.js](https://img.shields.io/badge/Node.js-22-5FA04E?logo=nodedotjs&logoColor=white)
-![TypeScript](https://img.shields.io/badge/TypeScript-7.0-3178C6?logo=typescript&logoColor=white)
-![React](https://img.shields.io/badge/React-19-61DAFB?logo=react&logoColor=black)
-![three.js](https://img.shields.io/badge/three.js-r187-000000?logo=threedotjs&logoColor=white)
-![Matter](https://img.shields.io/badge/matter.js-0.17-1A1A1A)
-![Redis](https://img.shields.io/badge/Redis-8.10-FF4438?logo=redis&logoColor=white)
-![MCP](https://img.shields.io/badge/MCP_SDK-1.32-D97757)
-![OpenAI](https://img.shields.io/badge/OpenAI_SDK-7-412991?logo=openai&logoColor=white)
-
 ## 개요
 
 거주자가 식탁에 앉아 있다. 식사 중일 수도, 공부 중일 수도, 쉬는 중일 수도 있다. 카메라에 거주자가 컵을 들고 입으로 가져가는 모습까지 보이면, 시스템은 거주자가 마시고 있다는 근거를 얻는다. 이후 거주자가 일어나 그 컵을 싱크대로 옮기면, 로봇은 **거주자가 하던 일**과 **그 뒤에 한 일**을 함께 기록할 수 있다.
