@@ -2,7 +2,7 @@
 
 Documentation for the NOONCHI smart-home agent and CSE 406 project milestones.
 
-- `site/guide/` contains system operation and the demo walkthrough.
+- `site/index.md` and `site/guide/` contain the noonchi README in Korean, one page per section.
 - `site/submissions/` contains the CSE 406 milestone pages.
 - `site/public/submission-a/` and `site/public/submission-b/` contain English PDFs and LaTeX sources. The B source was reconstructed from its final PDF.
 

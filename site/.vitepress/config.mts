@@ -8,7 +8,7 @@ const docs = [{ text: 'Project Paper', link: '/submissions/project-paper' }]
 export default defineConfig({
   lang: 'ko-KR',
   title: 'NOONCHI',
-  description: '거주자의 일상을 관찰하고 필요한 순간에 먼저 돕는 눈치 프로젝트.',
+  description: '눈치(NOONCHI)는 LG의 홈 로봇 클로이드(CLOiD)를 위한 의사결정 시스템 프로토타입이다.',
   locales: {
     submissions: {
       lang: 'en',
@@ -23,20 +23,27 @@ export default defineConfig({
     i18nRouting: false,
     logo: '/brand/header-icon.png',
     nav: [
-      { text: '프로젝트 개요', link: '/' },
-      { text: '시스템 구조', link: '/guide/system' },
-      { text: '시연과 실험', link: '/guide/scenarios' },
+      { text: '개요', link: '/' },
+      { text: '작동 방식', link: '/guide/how-it-works' },
+      { text: '결과', link: '/guide/results' },
       { text: 'Docs', link: '/submissions/project-paper', activeMatch: '^/submissions/' },
     ],
     sidebar: [
       {
         text: '프로젝트',
         items: [
-          { text: '프로젝트 개요', link: '/' },
-          { text: '시스템 구조', link: '/guide/system' },
-          { text: '시연과 실험', link: '/guide/scenarios' },
-          { text: '실행 안내', link: '/guide/run' },
-          { text: '개발 노트', link: '/guide/development-notes' },
+          { text: '개요', link: '/' },
+          { text: 'I. 배경', link: '/guide/background' },
+          { text: 'II. 데이터', link: '/guide/data' },
+          { text: 'III. 작동 방식', link: '/guide/how-it-works' },
+          { text: 'IV. 결과', link: '/guide/results' },
+          { text: 'V. 기존 연구와 비교', link: '/guide/prior-work' },
+          { text: 'VI. 한계와 다음 단계', link: '/guide/limitations' },
+          { text: '팀', link: '/guide/team' },
+          { text: '저장소 구조', link: '/guide/repository' },
+          { text: '출처', link: '/guide/sources' },
+          { text: '라이선스', link: '/guide/license' },
+          { text: '시작하기', link: '/guide/getting-started' },
         ],
       },
       { text: 'Docs', items: docs },
