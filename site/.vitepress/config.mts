@@ -3,13 +3,7 @@ import { defineConfig } from 'vitepress'
 const repository = process.env.GITHUB_REPOSITORY?.split('/').at(-1)
 const base = process.env.GITHUB_ACTIONS === 'true' && repository ? '/' + repository + '/' : '/'
 
-const milestones = [
-  { text: 'A. Proposal and Requirements', link: '/submissions/a' },
-  { text: 'B. Specification', link: '/submissions/b' },
-  { text: 'C. Design', link: '/submissions/c' },
-  { text: 'D. Implementation and Integration', link: '/submissions/d' },
-  { text: 'E. Final Paper and User Guide', link: '/submissions/e' },
-]
+const docs = [{ text: 'Project Paper', link: '/submissions/project-paper' }]
 
 export default defineConfig({
   lang: 'ko-KR',
@@ -32,7 +26,7 @@ export default defineConfig({
       { text: '프로젝트 개요', link: '/' },
       { text: '시스템 구조', link: '/guide/system' },
       { text: '시연과 실험', link: '/guide/scenarios' },
-      { text: 'Docs', link: '/submissions/a', activeMatch: '^/submissions/' },
+      { text: 'Docs', link: '/submissions/project-paper', activeMatch: '^/submissions/' },
     ],
     sidebar: [
       {
@@ -45,7 +39,7 @@ export default defineConfig({
           { text: '개발 노트', link: '/guide/development-notes' },
         ],
       },
-      { text: 'Docs', items: milestones },
+      { text: 'Docs', items: docs },
     ],
     search: { provider: 'local' },
     outline: { level: [2, 3], label: '이 페이지에서' },

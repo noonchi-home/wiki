@@ -2,7 +2,7 @@
 aside: false
 ---
 
-# B. Specification
+# Project Paper
 
 <script setup>
 import { withBase } from 'vitepress'
@@ -20,5 +20,5 @@ Reconstructed from the final specification PDF.
 
 </details>
 
-<DocumentReader file="/submission-b/specification.pdf" title="Specification" :page-count="4" />
+<DocumentReader file="/submission-b/specification.pdf" title="Project Paper" :page-count="4" />
 
